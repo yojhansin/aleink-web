@@ -1,0 +1,17 @@
+# Configuración de Netlify para ALE.INK
+[build]
+  publish = "."
+
+# Redirección: /panel lleva al panel del artista (URL más limpia para Alejandro)
+[[redirects]]
+  from = "/panel"
+  to = "/panel-artista.html"
+  status = 200
+
+# Cabeceras de seguridad recomendadas
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

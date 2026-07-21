@@ -1,0 +1,2549 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<meta name="theme-color" content="#f2f1ee" media="(prefers-color-scheme: light)"/>
+<meta name="theme-color" content="#080808" media="(prefers-color-scheme: dark)"/>
+<meta name="robots" content="noindex,nofollow"/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23d6002f'/%3E%3Ctext x='32' y='44' font-family='Arial Black,Arial' font-size='34' font-weight='900' fill='%23fff' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E"/>
+<title>ALE.INK · Panel Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+/* ── Foco de teclado ──
+   Antes solo 2 inputs tenían algún indicador de foco en TODA la app —
+   nada avisaba dónde estabas parado navegando con Tab (botones,
+   tarjetas, chips, nav). Se usa :focus-visible (no aparece con clic
+   de mouse, solo con teclado) para no ensuciar visualmente el uso
+   normal, pero SÍ estar siempre presente para quien navega sin mouse. */
+:focus{outline:none}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px;border-radius:4px}
+.bnav-item:focus-visible,.filter-chip:focus-visible,.subtab-chip:focus-visible{outline-offset:-2px}
+.qcard:focus-visible,.sess-card:focus-visible{outline-offset:2px;box-shadow:0 0 0 4px var(--red3)}
+/* ── Sistema de íconos (SVG, embebido en el sprite al inicio del body) ──
+   Reemplaza los emojis usados como íconos en toda la app. Hereda
+   tamaño y color de su contexto, igual que hacía el emoji. */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.icon{width:1em;height:1em;display:inline-block;vertical-align:-0.125em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+:root{
+  color-scheme:dark;
+  /* ── DARK (default) ── */
+  --bg:#080808;--bg2:#111;--bg3:#181818;--bg4:#222;--bg5:#2a2a2a;
+  --surface:#141414;--surface2:#1c1c1c;--surface-raised:#1a1a1a;
+  --hairline:rgba(255,255,255,.07);--hairline2:rgba(255,255,255,.12);
+  --red:#ff003c;--red2:#cc0030;--red3:rgba(255,0,60,.1);--redg:0 0 24px rgba(255,0,60,.35);
+  --w:#f0ede8;--w80:#d4d0cb;--w60:#a8a4a0;--w35:#6a6762;--w10:#242424;
+  --green:#00c48c;--green-bg:rgba(0,196,140,.12);
+  --amber:#ffab00;--amber-bg:rgba(255,171,0,.12);
+  --blue:#4f9eff;--blue-bg:rgba(79,158,255,.12);
+  --purple:#a879ff;--purple-bg:rgba(168,121,255,.14);
+  --sheet-handle:rgba(255,255,255,.22);
+  --shadow-card:0 1px 2px rgba(0,0,0,.4),0 8px 24px -8px rgba(0,0,0,.55);
+  --shadow-float:0 4px 16px rgba(0,0,0,.35),0 16px 40px -12px rgba(0,0,0,.6);
+  --shadow-sheet:0 -8px 40px rgba(0,0,0,.5);
+  --overlay:rgba(0,0,0,.55);
+  --tile-bg:rgba(255,255,255,.04);
+  /* Fonts */
+  --d:'Bebas Neue',sans-serif;--s:'Space Grotesk',sans-serif;--m:'JetBrains Mono',monospace;
+  /* Apple-ish easings */
+  --ease:cubic-bezier(.16,1,.3,1);
+  --spring:cubic-bezier(.34,1.56,.64,1);
+  --sheet-ease:cubic-bezier(.32,.72,0,1);
+  --r-sm:14px;--r-md:18px;--r-lg:24px;--r-xl:30px;--r-pill:999px;
+  --nav:60px;--bottom:84px;
+  /* ── Escala tipográfica ──
+     Había 36 tamaños de fuente distintos sin ningún sistema (varios
+     casi idénticos entre sí, ej. 0.5/0.52/0.54/0.56/0.68rem). Se
+     consolida en una escala clara de 8 pasos, aplicada a los
+     elementos que más definen la jerarquía visual (títulos, valores
+     de KPI, nombres de tarjeta) — sin tocar cada microtexto existente
+     uno por uno, para no arriesgar romper algo que no se pueda
+     verificar visualmente en el momento. */
+  --fs-2xs:.68rem;--fs-xs:.75rem;--fs-sm:.82rem;--fs-md:.95rem;
+  --fs-lg:1.15rem;--fs-xl:1.4rem;--fs-2xl:1.85rem;--fs-3xl:2.4rem;
+  /* ── Escala de espaciado (base 4px) ── */
+  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:20px;--sp-6:24px;--sp-8:32px;
+}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f2f1ee;--bg2:#fff;--bg3:#fff;--bg4:#ebe9e5;--bg5:#dedbd5;
+  --surface:#ffffff;--surface2:#ffffff;--surface-raised:#ffffff;
+  --hairline:rgba(0,0,0,.07);--hairline2:rgba(0,0,0,.1);
+  --red:#d6002f;--red2:#b80027;--red3:rgba(255,0,60,.08);--redg:0 0 24px rgba(255,0,60,.18);
+  --w:#16140f;--w80:#3a372f;--w60:#6b675e;--w35:#9b968b;--w10:#e4e1da;
+  --green:#087952;--green-bg:rgba(10,157,110,.1);
+  --amber:#a25e00;--amber-bg:rgba(201,119,0,.1);
+  --blue:#2266dd;--blue-bg:rgba(34,102,221,.1);
+  --purple:#6d3fd6;--purple-bg:rgba(109,63,214,.1);
+  --sheet-handle:rgba(0,0,0,.18);
+  --shadow-card:0 1px 2px rgba(20,15,5,.04),0 8px 24px -8px rgba(20,15,5,.1);
+  --shadow-float:0 4px 16px rgba(20,15,5,.06),0 16px 36px -12px rgba(20,15,5,.14);
+  --shadow-sheet:0 -8px 40px rgba(20,15,5,.16);
+  --overlay:rgba(20,17,10,.35);
+  --tile-bg:rgba(0,0,0,.035);
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--w);font-family:var(--s);font-weight:400;font-size:16px;line-height:1.4;display:flex;flex-direction:column;transition:background .4s var(--ease),color .4s var(--ease);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+.app-shell{flex:1;min-height:0;display:flex;flex-direction:column}
+::-webkit-scrollbar{width:2px;height:2px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--red)}
+::selection{background:var(--red);color:#fff}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+
+/* ── TOP NAV ── */
+.top-nav{height:var(--nav);background:var(--bg);border-bottom:1px solid var(--hairline);display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0;position:relative;z-index:100;transition:background .4s var(--ease),border-color .4s var(--ease)}
+.nav-logo{font-family:var(--d);font-size:1.5rem;letter-spacing:.08em}
+.nav-logo em{color:var(--red);font-style:normal}
+.nav-right{display:flex;align-items:center;gap:10px}
+.live-badge{display:flex;align-items:center;gap:6px;font-family:var(--m);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--green);background:var(--green-bg);border-radius:var(--r-pill);padding:6px 12px 6px 10px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:lp 2s infinite}
+@keyframes lp{0%,100%{box-shadow:0 0 0 0 rgba(0,196,140,.5)}50%{box-shadow:0 0 0 5px rgba(0,196,140,0)}}
+.icon-btn{position:relative;background:var(--tile-bg);border:none;color:var(--w);cursor:pointer;width:38px;height:38px;border-radius:var(--r-pill);display:flex;align-items:center;justify-content:center;font-size:1.05rem;transition:transform .25s var(--spring),background .25s var(--ease)}
+.icon-btn:active{transform:scale(.88)}
+.notif-badge{position:absolute;top:-3px;right:-3px;width:18px;height:18px;background:var(--red);border-radius:50%;font-family:var(--m);font-size:.62rem;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;box-shadow:0 0 0 2px var(--bg)}
+.notif-badge.hidden{display:none}
+.theme-toggle{position:relative;width:52px;height:30px;border-radius:var(--r-pill);background:var(--tile-bg);border:none;cursor:pointer;flex-shrink:0;transition:background .3s var(--ease)}
+.theme-toggle-knob{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--bg5);color:var(--w);display:flex;align-items:center;justify-content:center;transition:transform .35s var(--spring),background .3s var(--ease);box-shadow:0 1px 3px rgba(0,0,0,.3);pointer-events:none}
+.theme-toggle-knob .icon{width:14px;height:14px}
+.theme-toggle-knob .icon-sun{display:none}
+:root[data-theme="light"] .theme-toggle-knob{transform:translateX(22px);background:#fff;color:var(--amber)}
+:root[data-theme="light"] .theme-toggle-knob .icon-moon{display:none}
+:root[data-theme="light"] .theme-toggle-knob .icon-sun{display:block}
+
+/* ── MAIN CONTENT ── */
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.tab-content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:env(safe-area-inset-bottom,0px)}
+/* FIX: cambiar de pestaña (Cotiz./Sesiones/Stats/Ajustes) era un corte
+   seco — innerHTML se reemplazaba sin ninguna transición. Se agrega
+   un fade + deslizamiento sutil, sin fill-mode "both/forwards" (que
+   dejaría transform/opacity bloqueados para siempre después de la
+   animación, un problema real que ya vimos en otro proyecto). */
+@keyframes tabFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.tab-content.animating{animation:tabFadeIn .32s cubic-bezier(.16,1,.3,1)}
+
+/* ── BOTTOM DOCK (floating) ── */
+.bottom-nav-wrap{position:relative;flex-shrink:0;padding:0 12px calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(to top,var(--bg) 55%,transparent);pointer-events:none;margin-top:-28px;z-index:100}
+.bottom-nav{height:var(--bottom);background:var(--surface-raised);border:1px solid var(--hairline);border-radius:var(--r-xl);display:flex;align-items:center;gap:4px;padding:6px;box-shadow:var(--shadow-float);pointer-events:all;transition:background .4s var(--ease),border-color .4s var(--ease)}
+.bnav-item{flex:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;position:relative;border:none;background:none;border-radius:var(--r-lg);transition:background .35s var(--spring),transform .25s var(--spring);color:var(--w60)}
+.bnav-item:active{transform:scale(.93)}
+.bnav-item.active{background:var(--red);color:#fff;box-shadow:0 4px 14px -2px rgba(255,0,60,.5)}
+.bnav-icon{font-size:1.15rem;line-height:1;transition:transform .3s var(--spring);filter:grayscale(1) brightness(.7)}
+.bnav-item.active .bnav-icon{transform:translateY(-1px) scale(1.08);filter:none}
+.lbl-l{display:none}
+.bnav-label{font-family:var(--m);font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;color:inherit;transition:color .2s}
+.bnav-pip{position:absolute;top:4px;right:calc(50% - 18px);width:7px;height:7px;background:var(--red);border-radius:50%;display:none;box-shadow:0 0 0 2px var(--surface-raised)}
+.bnav-item.active .bnav-pip{box-shadow:0 0 0 2px var(--red)}
+.bnav-pip.show{display:block;animation:pipPulse 2s infinite}
+@keyframes pipPulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── SECTION PADDING ── */
+.sp{padding:16px}
+
+/* ── LOCK SCREEN ── */
+#lockScreen{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;transition:background .4s var(--ease),opacity .4s var(--ease),transform .4s var(--ease)}
+#lockScreen.unlocking{opacity:0;transform:scale(1.04)}
+.lock-logo{font-family:var(--d);font-size:3.5rem;letter-spacing:.1em;margin-bottom:4px;text-align:center}
+.lock-logo em{color:var(--red);font-style:normal}
+.lock-sub{font-family:var(--m);font-size:.7rem;letter-spacing:.35em;text-transform:uppercase;color:var(--w60);margin-bottom:48px;text-align:center}
+.lock-title{font-family:var(--m);font-size:.7rem;letter-spacing:.3em;text-transform:uppercase;color:var(--red);margin-bottom:20px}
+.pin-display{display:flex;gap:12px;margin-bottom:32px}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:1px solid var(--w35);background:transparent;transition:all .2s}
+.pin-dot.filled{background:var(--red);border-color:var(--red);box-shadow:0 0 12px rgba(255,0,60,.5)}
+.pin-dot.err{background:rgba(255,0,60,.3);border-color:var(--red);animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;max-width:248px}
+.pin-key{background:var(--surface);border:none;color:var(--w);font-family:var(--d);font-size:1.8rem;letter-spacing:.05em;height:66px;border-radius:var(--r-pill);cursor:pointer;transition:transform .15s var(--spring),background .2s var(--ease);display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-card)}
+.pin-key:active{background:var(--bg4);transform:scale(.93)}
+.pin-key.del{font-family:var(--s);font-size:.85rem;color:var(--w60);box-shadow:none;background:none}
+.pin-hint{font-family:var(--m);font-size:.7rem;color:var(--w60);letter-spacing:.15em;margin-top:28px;text-align:center}
+.lock-line{position:absolute;background:rgba(255,0,60,.06)}
+.lock-line-h{left:0;right:0;height:1px}
+.lock-line-v{top:0;bottom:0;width:1px}
+
+/* ── TOAST ── */
+#toastWrap{position:fixed;bottom:calc(var(--bottom) + 18px);left:12px;right:12px;z-index:9998;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
+.toast{background:var(--surface-raised);border:1px solid var(--hairline);padding:13px 18px;font-size:.88rem;color:var(--w);display:flex;align-items:center;gap:9px;max-width:380px;width:100%;border-radius:var(--r-pill);animation:toastIn .45s var(--spring);box-shadow:var(--shadow-float)}
+@keyframes toastIn{from{opacity:0;transform:translateY(16px) scale(.96)}}
+.toast.success{box-shadow:var(--shadow-float),inset 0 0 0 1px var(--green-bg)}.toast.warn{box-shadow:var(--shadow-float),inset 0 0 0 1px var(--amber-bg)}.toast.err{box-shadow:var(--shadow-float),inset 0 0 0 1px var(--red3)}
+
+/* ── NOTIFICATION DRAWER (sheet from right, iOS style) ── */
+#notifDrawer{position:fixed;top:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));width:min(340px,calc(100vw - 16px));background:var(--surface-raised);border-radius:var(--r-xl);z-index:200;transform:translateX(calc(100% + 16px));transition:transform .5s var(--sheet-ease);overflow-y:auto;box-shadow:var(--shadow-float)}
+#notifDrawer.open{transform:none}
+.nd-head{padding:18px 20px;border-bottom:1px solid var(--hairline);display:flex;justify-content:space-between;align-items:center}
+.nd-title{font-family:var(--m);font-size:.7rem;letter-spacing:.25em;text-transform:uppercase;color:var(--red)}
+.nd-clear{font-family:var(--m);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--w60);background:var(--tile-bg);border:none;border-radius:var(--r-pill);cursor:pointer;padding:6px 12px;transition:color .2s}
+.nd-clear:hover{color:var(--w)}
+.nd-item{padding:14px 20px;border-bottom:1px solid var(--hairline);display:flex;gap:12px;align-items:flex-start;cursor:pointer;transition:background .2s}
+.nd-item:hover{background:var(--tile-bg)}
+.nd-item.unread{box-shadow:inset 3px 0 0 var(--red)}
+.nd-icon{font-size:1rem;flex-shrink:0;margin-top:1px}
+.nd-body{flex:1;min-width:0}
+.nd-msg{font-size:.88rem;font-weight:500;color:var(--w);margin-bottom:3px;line-height:1.45}
+.nd-time{font-family:var(--m);font-size:.66rem;color:var(--w60)}
+.nd-empty{padding:40px 16px;text-align:center;font-family:var(--m);font-size:.7rem;color:var(--w60);letter-spacing:.2em;text-transform:uppercase}
+.notif-overlay{position:fixed;inset:0;z-index:199;background:var(--overlay);display:none;backdrop-filter:blur(2px)}
+.notif-overlay.show{display:block}
+
+/* ── KPI CARDS ── */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 16px 8px}
+.kpi{background:var(--surface);border-radius:var(--r-lg);padding:16px;position:relative;overflow:hidden;box-shadow:var(--shadow-card);transition:background .4s var(--ease)}
+.kpi::before{content:'';position:absolute;top:16px;right:16px;width:8px;height:8px;border-radius:50%}
+.kpi.red::before{background:var(--red)}.kpi.grn::before{background:var(--green)}.kpi.amb::before{background:var(--amber)}.kpi.blu::before{background:var(--blue)}
+.kpi-lbl{font-family:var(--m);font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--w60);margin-bottom:6px}
+.kpi-val{font-family:var(--d);font-size:var(--fs-3xl);line-height:1;letter-spacing:.02em;color:var(--w)}
+.kpi-val.red{color:var(--red)}.kpi-val.grn{color:var(--green)}.kpi-val.amb{color:var(--amber)}.kpi-val.blu{color:var(--blue)}
+.kpi-val.money{font-size:var(--fs-2xl);padding-top:5px}
+.kpi-sub{font-family:var(--m);font-size:.64rem;color:var(--w60);margin-top:5px}
+
+/* ── QUOTE CARDS ── */
+.section-head{display:flex;align-items:center;justify-content:space-between;padding:8px 16px 10px}
+.section-head-title{font-family:var(--m);font-size:var(--fs-2xs);letter-spacing:.28em;text-transform:uppercase;color:var(--red);display:flex;align-items:center;gap:8px}
+.section-head-title::before{content:'';width:14px;height:1px;background:var(--red)}
+.filter-row{display:flex;gap:7px;padding:0 16px 14px;overflow-x:auto;scrollbar-width:none}
+.filter-row::-webkit-scrollbar{display:none}
+.filter-chip{font-family:var(--m);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;background:var(--tile-bg);border:none;border-radius:var(--r-pill);color:var(--w60);padding:9px 14px;cursor:pointer;white-space:nowrap;transition:all .25s var(--ease);flex-shrink:0;font-weight:600}
+.filter-chip.active{color:#fff;background:var(--red);box-shadow:0 4px 12px -2px rgba(255,0,60,.45)}
+.qcard{background:var(--surface);border-radius:var(--r-lg);padding:16px;margin:0 16px 12px;transition:background .3s var(--ease),transform .2s var(--spring);box-shadow:var(--shadow-card);position:relative;cursor:pointer;display:flex;gap:13px}
+.qcard:active{transform:scale(.985)}
+@media(hover:hover){.qcard:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(0,0,0,.3),0 16px 32px -10px rgba(0,0,0,.5);background:var(--surface2)}}
+.qc-thumb{width:64px;height:64px;border-radius:var(--r-md);background:var(--tile-bg);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:1.4rem;position:relative}
+.qc-thumb img{width:100%;height:100%;object-fit:cover}
+.qc-thumb-count{position:absolute;bottom:3px;right:3px;background:rgba(0,0,0,.65);color:#fff;font-family:var(--m);font-size:.62rem;padding:2px 5px;border-radius:var(--r-pill);line-height:1}
+.qc-main{flex:1;min-width:0}
+.qc-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px;gap:8px}
+.qc-id{font-family:var(--m);font-size:.7rem;letter-spacing:.08em;color:var(--w60);display:flex;align-items:center;gap:6px}
+.qc-id::before{content:'';width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.qcard.pending .qc-id::before{background:var(--amber)}.qcard.approved .qc-id::before{background:var(--green)}.qcard.rejected .qc-id::before{background:var(--w35)}.qcard.done .qc-id::before{background:var(--blue)}
+.qc-status{font-family:var(--m);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;padding:5px 11px;border-radius:var(--r-pill);flex-shrink:0;font-weight:600}
+.qc-status.pending{color:var(--amber);background:var(--amber-bg)}
+.qc-status.approved{color:var(--green);background:var(--green-bg)}
+.qc-status.rejected{color:var(--w60);background:var(--tile-bg)}
+.qc-status.done{color:var(--blue);background:var(--blue-bg)}
+.qc-name{font-size:var(--fs-lg);font-weight:700;margin-bottom:5px;color:var(--w);letter-spacing:-.01em}
+.qc-meta{font-size:.84rem;color:var(--w60);margin-bottom:8px;line-height:1.4}
+.qc-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.qtag{font-family:var(--m);font-size:.66rem;letter-spacing:.04em;text-transform:uppercase;padding:5px 10px;background:var(--tile-bg);border-radius:var(--r-pill);color:var(--w60);font-weight:500}
+.qtag.hi{color:var(--red);background:var(--red3)}
+.qc-quick{display:flex;gap:8px}
+.qc-quick .btn{padding:9px 14px;font-size:.68rem}
+.empty-state{padding:56px 16px;text-align:center}
+.empty-icon{font-size:2.62rem;margin-bottom:12px;opacity:.25}
+.empty-txt{font-family:var(--m);font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--w60)}
+
+/* ── BUTTONS — pill shaped, higher contrast ── */
+.btn{font-family:var(--s);font-size:.78rem;letter-spacing:0;border:none;padding:11px 18px;border-radius:var(--r-pill);cursor:pointer;transition:transform .2s var(--spring),background .2s var(--ease);white-space:nowrap;display:inline-flex;align-items:center;gap:5px;font-weight:600}
+.btn:active{transform:scale(.94)}
+.btn-approve{color:#003320;background:var(--green)}.btn-approve:hover{background:#00e0a0}
+.btn-reject{color:var(--red);background:var(--red3)}.btn-reject:hover{background:rgba(255,0,60,.18)}
+.btn-wa{color:var(--w);background:var(--tile-bg)}.btn-wa:hover{background:var(--bg5)}
+.btn-dep{color:var(--blue);background:var(--blue-bg)}.btn-dep:hover{background:rgba(79,158,255,.2)}
+.btn-done{color:var(--w60);background:var(--tile-bg)}.btn-done:hover{color:var(--w)}
+.approve-form{display:none;flex-direction:column;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--hairline)}
+.approve-form.show{display:flex;animation:fadeUp .3s var(--ease)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}}
+.apf-row{display:flex;gap:6px}
+.finp{background:var(--tile-bg);border:1.5px solid transparent;color:var(--w);font-family:var(--s);font-size:1rem;padding:12px 15px;border-radius:var(--r-md);outline:none;width:100%;transition:border-color .2s var(--ease),background .2s var(--ease)}
+.finp:focus{border-color:var(--red);background:var(--surface)}
+.finp::placeholder{color:var(--w35)}
+
+/* ── SESSIONS / CALENDAR ── */
+.sessions-list{padding:0}
+.sess-card{background:var(--surface);border-radius:var(--r-lg);padding:15px;margin-bottom:10px;display:flex;gap:13px;align-items:flex-start;cursor:pointer;transition:transform .2s var(--spring),background .3s var(--ease);box-shadow:var(--shadow-card)}
+.sess-card:active{transform:scale(.985)}
+@media(hover:hover){.sess-card:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(0,0,0,.3),0 16px 32px -10px rgba(0,0,0,.5);background:var(--surface2)}}
+.sess-date-box{background:var(--tile-bg);border-radius:var(--r-md);padding:8px 11px;text-align:center;min-width:50px;flex-shrink:0}
+.sess-day{font-family:var(--d);font-size:1.5rem;line-height:1;color:var(--red)}
+.sess-month{font-family:var(--m);font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--w60)}
+.sess-body{flex:1;min-width:0}
+.sess-time{font-family:var(--s);font-size:.78rem;font-weight:500;color:var(--w60);margin-bottom:4px}
+.sess-name{font-size:var(--fs-lg);font-weight:700;margin-bottom:3px;color:var(--w)}
+.sess-style{font-family:var(--m);font-size:.66rem;color:var(--red);letter-spacing:.1em;text-transform:uppercase}
+.sess-status{font-family:var(--m);font-size:.64rem;padding:5px 10px;border-radius:var(--r-pill);margin-left:auto;flex-shrink:0;align-self:flex-start}
+.sess-status.upcoming{color:var(--amber);background:var(--amber-bg)}
+.sess-status.done{color:var(--green);background:var(--green-bg)}
+.sess-status.cancelled{color:var(--w60);background:var(--tile-bg)}
+.add-sess-btn{width:100%;margin:0 0 12px;padding:14px;background:var(--tile-bg);border:1.5px dashed var(--hairline2);border-radius:var(--r-pill);color:var(--w60);font-family:var(--m);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;transition:all .25s var(--ease);display:flex;align-items:center;justify-content:center;gap:8px}
+.add-sess-btn:active{transform:scale(.97)}
+.add-sess-btn:hover{border-color:var(--red);color:var(--red)}
+/* ── BARRA DE NAVEGACIÓN DEL CALENDARIO (Hoy · ‹ › · rango) ── */
+.cal-bar{display:flex;align-items:center;gap:8px;padding:14px 16px 12px}
+.cal-today{font-family:var(--s);font-size:.82rem;font-weight:700;color:var(--red);background:var(--red3);border:none;border-radius:var(--r-pill);padding:9px 16px;cursor:pointer;transition:transform .2s var(--spring),background .2s var(--ease)}
+.cal-today:active{transform:scale(.95)}
+@media(hover:hover){.cal-today:hover{background:rgba(255,0,60,.16)}}
+.cal-arrow{width:34px;height:34px;border-radius:50%;background:var(--tile-bg);border:none;color:var(--w);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s var(--ease),transform .2s var(--spring)}
+.cal-arrow:active{transform:scale(.9)}
+@media(hover:hover){.cal-arrow:hover{background:var(--bg5)}}
+.cal-arrow .icon{width:14px;height:14px}
+.cal-range{flex:1;text-align:right;font-size:.95rem;font-weight:700;color:var(--w);line-height:1.25}
+.cal-range small{display:block;font-family:var(--m);font-size:.62rem;color:var(--w60);font-weight:400;letter-spacing:.1em;text-transform:uppercase}
+
+/* ── LAYOUT: lateral (mini-cal + filtros) / principal (sesiones) ── */
+.cal-layout{padding:0 16px}
+
+/* ── MINI CALENDARIO MENSUAL ── */
+.mini-cal{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow-card);padding:14px;margin:0 0 12px}
+.mc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:0 2px}
+.mc-title{font-size:.98rem;font-weight:700;color:var(--w)}
+.mc-title span{color:var(--w60);font-weight:500}
+.mc-nav{display:flex;gap:6px}
+.mc-nav .cal-arrow{width:30px;height:30px}
+.mc-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.mc-dow{font-family:var(--m);font-size:.6rem;color:var(--w60);text-align:center;padding:6px 0 8px;text-transform:uppercase;letter-spacing:.06em}
+.mc-day{position:relative;aspect-ratio:1;border:none;background:none;border-radius:11px;color:var(--w);font-family:var(--s);font-size:.88rem;font-weight:500;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:background .2s var(--ease),transform .15s var(--spring);padding:0}
+.mc-day:active{transform:scale(.9)}
+@media(hover:hover){.mc-day:hover{background:var(--tile-bg)}}
+.mc-day.out{color:var(--w35)}
+.mc-day.today{box-shadow:inset 0 0 0 1.5px var(--red)}
+.mc-day.sel{background:var(--red);color:#fff;box-shadow:0 4px 12px -2px rgba(255,0,60,.45)}
+.mc-dots{display:flex;gap:2px;height:4px}
+.mc-dot{width:4px;height:4px;border-radius:50%}
+.mc-day.sel .mc-dot{background:#fff!important}
+
+/* ── FILTROS "MIS CALENDARIOS" (por estilo) ── */
+.cal-filters{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow-card);padding:14px 16px;margin:0 0 12px}
+.cf-title{font-size:.95rem;font-weight:700;color:var(--w);margin-bottom:8px}
+.cf-list{display:grid;grid-template-columns:1fr 1fr;gap:2px 14px}
+.cf-item{display:flex;align-items:center;gap:9px;background:none;border:none;padding:7px 2px;cursor:pointer;color:var(--w80);font-family:var(--s);font-size:.85rem;font-weight:500;border-radius:8px;text-align:left;transition:color .2s var(--ease)}
+.cf-item[aria-checked="false"]{color:var(--w35)}
+.cf-box{width:19px;height:19px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--hairline2);background:transparent;transition:all .2s var(--ease)}
+.cf-item[aria-checked="true"] .cf-box{border-color:transparent}
+.cf-box .icon{width:12px;height:12px;stroke-width:3.2;color:var(--surface);opacity:0;transition:opacity .15s}
+.cf-item[aria-checked="true"] .cf-box .icon{opacity:1}
+
+/* ── SUB-TABS (within Sessions) ── */
+.subtab-row{display:flex;gap:8px;padding:16px 16px 4px}
+.subtab-chip{flex:1;font-family:var(--s);font-size:.82rem;font-weight:600;background:var(--tile-bg);border:none;border-radius:var(--r-pill);color:var(--w60);padding:11px 14px;cursor:pointer;transition:all .25s var(--ease);text-align:center}
+.subtab-chip.active{color:#fff;background:var(--red);box-shadow:0 4px 12px -2px rgba(255,0,60,.45)}
+
+/* ── AVAILABILITY ── */
+.avail-intro{padding:8px 16px 4px}
+.avail-intro-txt{font-size:.86rem;color:var(--w60);line-height:1.5}
+.avail-share-btn{width:100%;justify-content:center;margin-top:10px}
+.avail-days{padding:8px 16px}
+.avail-day-card{background:var(--surface);border-radius:var(--r-lg);padding:16px;margin-bottom:10px;box-shadow:var(--shadow-card)}
+.avail-day-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px}
+.avail-day-lbl{font-size:1.02rem;font-weight:700;color:var(--w)}
+.avail-add-btn{font-family:var(--s);font-size:.74rem;font-weight:600;background:var(--green-bg);color:var(--green);border:none;border-radius:var(--r-pill);padding:8px 13px;cursor:pointer;transition:transform .2s var(--spring);white-space:nowrap}
+.avail-add-btn:active{transform:scale(.93)}
+.avail-slots{display:flex;flex-wrap:wrap;gap:8px}
+.avail-slot{display:flex;align-items:center;gap:8px;background:var(--tile-bg);border-radius:var(--r-pill);padding:8px 8px 8px 14px}
+.avail-slot-time{font-size:.86rem;font-weight:600;color:var(--w)}
+.avail-slot-label{font-family:var(--m);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--red);background:var(--red3);padding:3px 8px;border-radius:var(--r-pill)}
+.avail-slot-rm{width:22px;height:22px;border-radius:50%;border:none;background:var(--bg5);color:var(--w60);font-size:.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.avail-day-empty{font-size:.82rem;color:var(--w60);font-style:italic}
+.slot-date-display{font-size:1.05rem;font-weight:700;color:var(--w);background:var(--tile-bg);padding:12px 15px;border-radius:var(--r-md)}
+
+/* ── SHARE CARD PREVIEW ── */
+.share-card{background:linear-gradient(160deg,#0c0c0c,#080808);border-radius:var(--r-lg);padding:28px 22px;margin:4px 0 18px;position:relative;overflow:hidden;box-shadow:var(--shadow-card)}
+.share-card-logo{font-family:var(--d);font-size:1.6rem;letter-spacing:.08em;color:#f0ede8;margin-bottom:18px}
+.share-card-logo em{color:var(--red);font-style:normal}
+.share-card-title{font-family:var(--s);font-weight:700;font-size:1.7rem;color:#f0ede8;line-height:1.15;margin-bottom:18px}
+.share-day-row{margin-bottom:16px}
+.share-day-name{font-family:var(--s);font-weight:700;font-size:1rem;color:var(--red);margin-bottom:8px}
+.share-day-slots{display:flex;flex-wrap:wrap;gap:8px}
+.share-slot-pill{background:rgba(255,255,255,.07);color:#f0ede8;font-size:.82rem;font-weight:600;padding:8px 13px;border-radius:var(--r-pill)}
+.share-card-footer{font-size:.84rem;color:rgba(240,237,232,.55);margin-top:6px}
+
+/* ── STATS ── */
+.stats-wrap{padding:0 16px}
+.stat-card{background:var(--surface);border-radius:var(--r-lg);padding:16px;margin-bottom:10px;position:relative;box-shadow:var(--shadow-card)}
+.stat-card::before{content:'';position:absolute;top:16px;right:16px;width:8px;height:8px;border-radius:50%}
+.stat-card.red::before{background:var(--red)}.stat-card.grn::before{background:var(--green)}.stat-card.amb::before{background:var(--amber)}
+.sc-lbl{font-family:var(--m);font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:var(--w60);margin-bottom:6px}
+.sc-val{font-family:var(--d);font-size:2.4rem;letter-spacing:.03em;margin-bottom:2px;color:var(--w)}
+.sc-sub{font-family:var(--m);font-size:.65rem;color:var(--green)}
+.chart-card{background:var(--surface);border-radius:var(--r-lg);padding:18px;margin-bottom:10px;box-shadow:var(--shadow-card)}
+.chart-lbl{font-family:var(--m);font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--w60);margin-bottom:18px}
+.bars{display:flex;gap:8px;height:90px;align-items:flex-end}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%}
+.bar-fill{background:var(--red);width:100%;min-height:3px;border-radius:6px 6px 2px 2px;transition:height .6s var(--ease);position:relative;cursor:default}
+.bar-fill:hover::after{content:attr(data-v);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font-family:var(--m);font-size:.65rem;color:var(--w);white-space:nowrap;background:var(--surface-raised);padding:4px 8px;margin-bottom:6px;border-radius:var(--r-sm);box-shadow:var(--shadow-card)}
+.bar-lbl{font-family:var(--m);font-size:.64rem;color:var(--w60)}
+.style-rows{display:flex;flex-direction:column;gap:12px}
+.style-row{display:flex;align-items:center;gap:10px}
+.style-name{font-family:var(--m);font-size:.68rem;color:var(--w60);width:82px;flex-shrink:0}
+.style-bar-wrap{flex:1;height:6px;background:var(--tile-bg);border-radius:var(--r-pill);position:relative}
+.style-bar-fill{height:100%;background:var(--red);border-radius:var(--r-pill);transition:width .8s var(--ease)}
+.style-pct{font-family:var(--d);font-size:.9rem;color:var(--w);width:34px;text-align:right;flex-shrink:0}
+
+/* ── SETTINGS ── */
+.settings-wrap{padding:0 16px}
+.settings-section{margin-bottom:22px;background:var(--surface);border-radius:var(--r-lg);padding:6px 16px;box-shadow:var(--shadow-card)}
+.settings-sec-title{font-family:var(--m);font-size:.7rem;letter-spacing:.26em;text-transform:uppercase;color:var(--red);padding:14px 0 10px;display:flex;align-items:center;gap:8px}
+.settings-sec-title::before{content:'';width:10px;height:1px;background:var(--red)}
+.field-group{margin-bottom:12px}
+.settings-section .field-group:last-child{margin-bottom:6px}
+.field-label{font-family:var(--m);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--w60);margin-bottom:7px;display:block}
+.setting-row{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--hairline)}
+.settings-section .setting-row:last-child{border-bottom:none}
+.sr-left{flex:1;min-width:0}
+.sr-title{font-size:.95rem;font-weight:600;margin-bottom:3px;color:var(--w)}
+.sr-sub{font-family:var(--s);font-size:.78rem;color:var(--w60);line-height:1.45}
+.toggle{width:48px;height:28px;border-radius:var(--r-pill);background:var(--tile-bg);border:none;cursor:pointer;position:relative;transition:background .3s var(--ease);flex-shrink:0;margin-left:12px}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);transition:transform .3s var(--spring)}
+.toggle.on{background:var(--green)}
+.toggle.on::after{transform:translateX(20px)}
+.save-btn{width:100%;padding:15px;background:var(--red);border:none;border-radius:var(--r-pill);color:#fff;font-family:var(--m);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;margin-top:18px;transition:transform .2s var(--spring),background .2s var(--ease);font-weight:600;box-shadow:0 6px 18px -4px rgba(255,0,60,.5)}
+.save-btn:active{transform:scale(.97)}
+@media(hover:hover){.save-btn:hover{background:var(--red2);transform:translateY(-1px)}}
+.export-btn{width:100%;padding:13px;background:var(--tile-bg);border:none;border-radius:var(--r-pill);color:var(--w60);font-family:var(--m);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;margin-bottom:9px;transition:all .2s var(--ease);display:flex;align-items:center;justify-content:center;gap:8px}
+.export-btn:active{transform:scale(.97)}
+.export-btn:hover{color:var(--w);background:var(--bg5)}
+
+/* ── BOTTOM SHEET (AirPods-connect style) ── */
+.modal-overlay{position:fixed;inset:0;z-index:500;background:var(--overlay);backdrop-filter:blur(3px);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s var(--ease)}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface-raised);width:100%;max-width:520px;max-height:88vh;overflow-y:auto;padding:8px 22px calc(28px + env(safe-area-inset-bottom,0px));position:relative;border-radius:var(--r-xl) var(--r-xl) 0 0;transform:translateY(100%);transition:transform .5s var(--sheet-ease);box-shadow:var(--shadow-sheet);touch-action:none}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal.dragging{transition:none}
+.modal-handle{width:36px;height:5px;border-radius:var(--r-pill);background:var(--sheet-handle);margin:0 auto 18px;cursor:grab}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.modal-title{font-family:var(--d);font-size:1.6rem;letter-spacing:.05em;color:var(--w)}
+.modal-close{background:var(--tile-bg);border:none;border-radius:var(--r-pill);color:var(--w60);font-family:var(--m);font-size:.66rem;letter-spacing:.1em;padding:7px 13px;cursor:pointer;transition:all .2s var(--ease)}
+.modal-close:hover{color:var(--w);background:var(--bg5)}
+.modal-field{margin-bottom:14px}
+.modal-label{font-family:var(--m);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--w60);margin-bottom:7px;display:block}
+.modal-select{background:var(--tile-bg);border:1.5px solid transparent;color:var(--w);font-family:var(--s);font-size:.95rem;padding:11px 14px;border-radius:var(--r-md);width:100%;outline:none;transition:border-color .2s var(--ease)}
+.modal-select:focus{border-color:var(--red)}
+.modal-row{display:flex;gap:8px}
+.modal-actions{display:flex;gap:8px;margin-top:22px}
+.pin-notice{font-family:var(--m);font-size:.68rem;color:var(--w60);text-align:center;margin-top:16px;letter-spacing:.1em}
+
+/* ── QUOTE DETAIL SHEET ── */
+.qd-photos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.qd-photos.single{grid-template-columns:1fr}
+.qd-photo{aspect-ratio:1;border-radius:var(--r-lg);overflow:hidden;background:var(--tile-bg);cursor:zoom-in}
+.qd-photo img{width:100%;height:100%;object-fit:cover}
+.qd-status-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:10px}
+.qd-id{font-family:var(--m);font-size:.7rem;letter-spacing:.1em;color:var(--w60)}
+.qd-section{margin-bottom:20px}
+.qd-section-lbl{font-family:var(--m);font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--red);margin-bottom:10px;font-weight:600}
+.qd-name{font-family:var(--d);font-size:var(--fs-3xl);letter-spacing:.02em;color:var(--w);margin-bottom:4px;line-height:1}
+.qd-contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qd-contact-card{background:var(--tile-bg);border-radius:var(--r-md);padding:13px 14px;text-decoration:none;display:flex;flex-direction:column;gap:2px;transition:background .2s var(--ease)}
+.qd-contact-card:active{background:var(--bg5)}
+.qd-contact-lbl{font-family:var(--m);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--w60)}
+.qd-contact-val{font-size:.98rem;font-weight:600;color:var(--w)}
+.qd-contact-card.wa .qd-contact-val{color:var(--green)}
+.qd-facts{display:flex;flex-wrap:wrap;gap:8px}
+.qd-fact{background:var(--tile-bg);border-radius:var(--r-pill);padding:9px 15px;font-size:.88rem;font-weight:600;color:var(--w)}
+.qd-fact.hi{color:var(--red);background:var(--red3)}
+.qd-concept-box{background:var(--tile-bg);border-radius:var(--r-md);padding:16px;font-size:1rem;line-height:1.65;color:var(--w80)}
+.qd-price-box{background:var(--green-bg);border-radius:var(--r-md);padding:16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.qd-price-lbl{font-family:var(--m);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--green)}
+.qd-price-val{font-family:var(--d);font-size:1.8rem;color:var(--green)}
+.qd-actions{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.qd-actions .btn{justify-content:center;width:100%;padding:15px;font-size:.92rem}
+.qd-actions-row{display:flex;gap:10px}
+.qd-actions-row .btn{flex:1}
+
+/* Lightbox for photo zoom */
+#qdLightbox{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;padding:24px}
+#qdLightbox.open{display:flex}
+#qdLightbox img{max-width:100%;max-height:100%;border-radius:var(--r-md);object-fit:contain}
+
+/* ── CONFIRM DIALOG (replaces native confirm()) ── */
+#confirmOverlay{position:fixed;inset:0;z-index:900;background:var(--overlay);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .25s var(--ease)}
+#confirmOverlay.open{opacity:1;pointer-events:all}
+.confirm-box{background:var(--surface-raised);border-radius:var(--r-xl);padding:28px 24px 20px;width:100%;max-width:340px;box-shadow:var(--shadow-float);transform:scale(.93) translateY(8px);transition:transform .3s var(--spring);text-align:center}
+#confirmOverlay.open .confirm-box{transform:scale(1) translateY(0)}
+.confirm-icon{font-size:1.6rem;margin-bottom:12px;line-height:1;color:var(--red);display:flex;justify-content:center}
+.confirm-title{font-family:var(--s);font-size:1.08rem;font-weight:700;color:var(--w);margin-bottom:8px;line-height:1.3}
+.confirm-body{font-size:.86rem;color:var(--w60);line-height:1.55;margin-bottom:22px}
+.confirm-actions{display:flex;flex-direction:column;gap:9px}
+.confirm-btn-ok{font-family:var(--s);font-size:.9rem;font-weight:700;border:none;border-radius:var(--r-pill);padding:14px;cursor:pointer;transition:transform .2s var(--spring),background .2s var(--ease);width:100%}
+.confirm-btn-ok:active{transform:scale(.96)}
+.confirm-btn-ok.danger{background:var(--red);color:#fff;box-shadow:0 4px 14px -2px rgba(255,0,60,.45)}
+.confirm-btn-ok.danger:hover{background:#ff1a4f}
+.confirm-btn-cancel{font-family:var(--s);font-size:.9rem;font-weight:600;border:none;border-radius:var(--r-pill);padding:14px;cursor:pointer;background:var(--tile-bg);color:var(--w60);width:100%;transition:background .2s var(--ease)}
+.confirm-btn-cancel:hover{background:var(--bg5);color:var(--w)}
+
+/* ── PULL INDICATOR ── */
+.pull-ind{display:flex;align-items:center;justify-content:center;padding:10px 0;gap:8px;font-family:var(--m);font-size:.66rem;letter-spacing:.15em;text-transform:uppercase;color:var(--w60)}
+.pull-spinner{width:12px;height:12px;border:1.5px solid var(--hairline2);border-top-color:var(--red);border-radius:50%;animation:spin 1s linear infinite;display:none}
+.pull-spinner.show{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── SCROLLABLE AREA PADDING ── */
+.scroll-bottom-pad{height:16px}
+
+/* ══════════════════════════════════════════════════════
+   ESCRITORIO (≥860px) — layout propio, no la vista mobile angostada
+   FIX v2: la primera pasada solo centraba la columna mobile en medio
+   de la pantalla, dejando franjas vacías a los costados — se seguía
+   viendo "una app de celular estirada", no un panel de escritorio.
+   Ahora: menú lateral fijo (reutiliza los mismos botones/IDs de la
+   navegación inferior, solo cambia cómo se VEN — el JS no se toca),
+   y el contenido usa el ancho real disponible con grillas de
+   tarjetas en vez de una columna angosta y única.
+   ══════════════════════════════════════════════════════ */
+@media(min-width:860px){
+  body{background:var(--bg2)}
+  .top-nav{background:var(--bg2);padding:0 28px}
+  #lockScreen{background:var(--bg2)}
+
+  .app-shell{display:flex;flex-direction:row;flex:1;min-height:0}
+  .main{flex:1;min-width:0;background:var(--bg)}
+  .tab-content{max-width:1180px;margin:0 auto;padding:28px 32px 40px}
+
+  /* ── Menú lateral (mismos botones de siempre, reordenados) ──
+     FIX v3: la v2 solo acomodaba los botones en columna, sin ningún
+     tratamiento visual propio — se veía como una lista de links, no
+     como un panel premium. Ahora cada ícono vive en su propia
+     "insignia" redondeada, y el estado activo se marca con un
+     relleno de color sólido (mismo lenguaje que las referencias:
+     Linear/Stripe/dashboards modernos usan esta insignia+color
+     como indicador de sección activa, no solo un cambio de texto). */
+  .bottom-nav-wrap{
+    order:-1;position:static;flex-shrink:0;width:240px;height:auto;
+    margin:0;padding:24px 16px;background:var(--bg2);
+    border-right:1px solid var(--hairline);pointer-events:all;
+    display:flex;flex-direction:column;gap:28px;
+  }
+  .sidebar-mark{
+    display:flex!important;align-items:center;gap:10px;padding:0 8px;
+    font-family:var(--d);font-size:1.3rem;letter-spacing:.03em;color:var(--w);
+  }
+  .sidebar-mark-badge{
+    width:34px;height:34px;border-radius:var(--r-md);background:var(--red);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    box-shadow:0 4px 14px -2px rgba(255,0,60,.5);
+  }
+  .sidebar-mark-badge svg{width:18px;height:18px;color:#fff}
+  .bottom-nav{
+    height:auto;flex-direction:column;align-items:stretch;gap:4px;
+    background:none;border:none;box-shadow:none;padding:0;
+  }
+  .bnav-item{
+    flex-direction:row;justify-content:flex-start;gap:12px;
+    height:48px;padding:0 10px;border-radius:var(--r-md);
+  }
+  .bnav-item:hover{background:var(--tile-bg)}
+  .bnav-item.active{background:none;box-shadow:none}
+  .bnav-item.active:hover{background:none}
+  .bnav-icon{
+    transform:none!important;width:32px;height:32px;flex-shrink:0;
+    border-radius:var(--r-md);background:var(--tile-bg);
+    display:flex;align-items:center;justify-content:center;
+    transition:background .3s var(--ease),color .3s var(--ease);
+  }
+  .bnav-item.active .bnav-icon{background:var(--red);color:#fff;box-shadow:0 4px 14px -2px rgba(255,0,60,.5)}
+  .bnav-label{font-family:var(--s);font-size:.86rem;font-weight:600;letter-spacing:0;text-transform:none;transition:color .2s var(--ease)}
+  .bnav-item.active .bnav-label{color:var(--w)}
+  .bnav-pip{top:6px;left:34px;right:auto}
+
+  /* ── Un solo eje de alineación: las secciones internas pierden su padding
+     horizontal propio porque .tab-content ya acolcha el contenido ── */
+  .section-head,.filter-row,.subtab-row,.avail-intro,.avail-days,.week-strip,.sessions-list{padding-left:0;padding-right:0}
+  .sp{padding-left:0;padding-right:0}
+  .add-sess-btn{width:100%;margin-left:0;margin-right:0}
+  .qcard{margin-left:0;margin-right:0}
+  #toastWrap{bottom:24px}
+  .nav-logo{display:none}
+  .top-nav{justify-content:flex-end}
+  .lbl-s{display:none}
+  .lbl-l{display:inline}
+
+  /* ── KPIs: fila completa, no una grilla apretada de 2 ── */
+  .kpi-grid{grid-template-columns:repeat(4,1fr);padding:0 0 20px}
+  .kpi{padding:20px}
+  .kpi-val{font-size:2.6rem}
+
+  /* ── Cotizaciones y sesiones: grilla real, no una columna sola ── */
+  .qcard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+  .qcard{margin:0}
+  .sessions-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;align-content:start}
+  .sess-card{margin:0}
+
+  /* ── Agenda: lateral fijo (mini-cal + calendarios) + lista de sesiones ── */
+  .cal-bar{padding:0 0 16px}
+  .cal-layout{padding:0;display:grid;grid-template-columns:290px minmax(0,1fr);gap:20px;align-items:start}
+  .cal-side{position:sticky;top:0}
+  .cf-list{grid-template-columns:1fr}
+
+  /* ── Disponibilidad: 2 columnas de días + botón de ancho natural ── */
+  .avail-days{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+  .avail-day-card{margin-bottom:0}
+  .avail-share-btn{width:auto;min-width:320px}
+
+  /* ── Stats: los 3 charts uno al lado del otro, no apilados ── */
+  .stats-wrap{padding:0;display:grid;grid-template-columns:1.3fr 1fr;gap:14px}
+  .stats-wrap .chart-card:first-child{grid-column:1/-1}
+
+  /* ── Ajustes: los campos de una sección en 2 columnas ── */
+  .settings-wrap{padding:0;display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+  .settings-section:first-child{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;column-gap:16px}
+  .settings-section:first-child .settings-sec-title{grid-column:1/-1}
+  .save-btn{grid-column:1/-1;width:auto;min-width:260px;justify-self:start}
+
+  .export-btn{width:auto;min-width:220px}
+
+  /* ── Filas de acción en la tarjeta de detalle ── */
+  .qd-actions{flex-direction:column}
+  .qd-actions-row{display:flex;gap:10px}
+  .qd-actions-row .btn{flex:1}
+
+  /* ── Modales: diálogo centrado, no hoja anclada abajo ── */
+  .modal-overlay{align-items:center;padding:24px}
+  .modal{border-radius:var(--r-xl);max-height:85vh;max-width:560px}
+  .modal-handle{display:none}
+}
+
+@media(min-width:1300px){
+  .kpi-grid{grid-template-columns:repeat(4,minmax(0,240px))}
+}
+</style>
+<script>
+(function(){
+  try{
+    var t = localStorage.getItem('aleink_theme');
+    if(!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    if(t === 'light') document.documentElement.setAttribute('data-theme','light');
+  }catch(e){}
+})();
+</script>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+<defs>
+<symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><rect x="9" y="2.5" width="6" height="3" rx="1"/><path d="M8.5 11h7M8.5 14.5h7M8.5 18h4"/></symbol>
+<symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+<symbol id="i-bar-chart" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16"/><rect x="7" y="13" width="3" height="5"/><rect x="12" y="9" width="3" height="9"/><rect x="17" y="6" width="3" height="12"/></symbol>
+<symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2.5 12h3M18.5 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 10a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></symbol>
+<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12.5 9.5 18 20 6"/></symbol>
+<symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m7.5 12.5 3 3 6-6.5"/></symbol>
+<symbol id="i-alert-triangle" viewBox="0 0 24 24"><path d="M12 3 2 20h20Z"/><path d="M12 9.5v4.2"/><circle cx="12" cy="17" r="1"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1V7M6 7l1 13.5a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1L18 7"/><path d="M10 11v6M14 11v6"/></symbol>
+<symbol id="i-message-circle" viewBox="0 0 24 24"><path d="M4 4h16v12H8l-4 4Z"/></symbol>
+<symbol id="i-share" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+<symbol id="i-inbox" viewBox="0 0 24 24"><path d="M4 12h4.5l1.5 3h4l1.5-3H20"/><path d="M4 12 6 5h12l2 7v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Z"/></symbol>
+<symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1 0 1.5-.5 1.5-1.3 0-.4-.15-.7-.4-1a1.4 1.4 0 0 1-.35-.95c0-.8.65-1.4 1.4-1.4H16a4.5 4.5 0 0 0 4.5-4.5C20.5 6.8 16.7 3 12 3Z"/><circle cx="7.5" cy="11" r="1.1"/><circle cx="10.5" cy="7.3" r="1.1"/><circle cx="15" cy="7.6" r="1.1"/><circle cx="17.3" cy="11.5" r="1.1"/></symbol>
+<symbol id="i-phone-off" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M9.5 5.5 8 4C7 3 5.5 3.2 5 4.5c-1 2.5 1 7.5 5 11.5s9 6 11.5 5c1.3-.5 1.5-2 .5-3l-1.7-1.7"/><path d="M14 9.5l1.5-1.5"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></symbol>
+<symbol id="i-chev-l" viewBox="0 0 24 24"><path d="M14.5 5 8 12l6.5 7"/></symbol>
+<symbol id="i-chev-r" viewBox="0 0 24 24"><path d="M9.5 5 16 12l-6.5 7"/></symbol>
+<symbol id="i-hexagon" viewBox="0 0 24 24"><path d="m12 2 8.7 5v10L12 22l-8.7-5V7Z"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v13M7 11l5 5 5-5"/><path d="M4 18v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1"/></symbol>
+<symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/><circle cx="12" cy="12" r="2.3"/></symbol>
+</defs>
+</svg>
+
+
+<!-- LOCK SCREEN -->
+<div id="lockScreen">
+  <div class="lock-line lock-line-h" style="top:25%"></div>
+  <div class="lock-line lock-line-h" style="top:75%"></div>
+  <div class="lock-line lock-line-v" style="left:20%"></div>
+  <div class="lock-line lock-line-v" style="left:80%"></div>
+  <div class="lock-logo"><em>ALE</em>.INK</div>
+  <div class="lock-sub">Panel Administrativo</div>
+  <div class="lock-title">Ingresa tu PIN</div>
+  <div class="sr-only" role="status" aria-live="polite" id="pinStatus"></div>
+  <div class="pin-display" id="pinDisplay" aria-hidden="true">
+    <div class="pin-dot" id="pd0"></div>
+    <div class="pin-dot" id="pd1"></div>
+    <div class="pin-dot" id="pd2"></div>
+    <div class="pin-dot" id="pd3"></div>
+  </div>
+  <div class="pin-grid">
+    <button class="pin-key" onclick="pinPress('1')">1</button>
+    <button class="pin-key" onclick="pinPress('2')">2</button>
+    <button class="pin-key" onclick="pinPress('3')">3</button>
+    <button class="pin-key" onclick="pinPress('4')">4</button>
+    <button class="pin-key" onclick="pinPress('5')">5</button>
+    <button class="pin-key" onclick="pinPress('6')">6</button>
+    <button class="pin-key" onclick="pinPress('7')">7</button>
+    <button class="pin-key" onclick="pinPress('8')">8</button>
+    <button class="pin-key" onclick="pinPress('9')">9</button>
+    <button class="pin-key" style="visibility:hidden"></button>
+    <button class="pin-key" onclick="pinPress('0')">0</button>
+    <button class="pin-key del" onclick="pinDel()" aria-label="Borrar último dígito">⌫</button>
+  </div>
+  <div class="pin-notice" id="pinHint">PIN por defecto: 1234 · Cámbialo en Ajustes</div>
+</div>
+
+<!-- NOTIFICATION OVERLAY -->
+<div class="notif-overlay" id="notifOverlay" onclick="closeNotifDrawer()"></div>
+
+<!-- NOTIFICATION DRAWER -->
+<div id="notifDrawer" role="dialog" aria-label="Notificaciones" tabindex="-1">
+  <div class="nd-head">
+    <span class="nd-title">Notificaciones</span>
+    <button class="nd-clear" onclick="clearNotifs()">Borrar todas</button>
+  </div>
+  <div id="notifList"></div>
+</div>
+
+<!-- TOP NAV -->
+<div class="top-nav">
+  <div class="nav-logo"><em>ALE</em>.INK</div>
+  <div class="nav-right">
+    <div class="live-badge"><div class="live-dot"></div>En vivo</div>
+    <button class="theme-toggle" onclick="toggleTheme()" role="switch" aria-label="Tema claro" aria-checked="false" id="themeToggle">
+      <span class="theme-toggle-knob">
+        <svg class="icon icon-moon"><use href="#i-moon"></use></svg>
+        <svg class="icon icon-sun"><use href="#i-sun"></use></svg>
+      </span>
+    </button>
+    <button class="icon-btn" onclick="toggleNotifDrawer()" aria-label="Notificaciones">
+      <svg class="icon"><use href="#i-bell"></use></svg>
+      <div class="notif-badge hidden" id="notifBadge">0</div>
+    </button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="app-shell">
+<div class="main">
+  <div class="tab-content" id="mainContent">
+    <!-- content injected by JS -->
+  </div>
+</div>
+
+<!-- BOTTOM DOCK (mobile) / SIDEBAR (escritorio) -->
+<div class="bottom-nav-wrap">
+  <div class="sidebar-mark" style="display:none">
+    <div class="sidebar-mark-badge"><svg class="icon"><use href="#i-hexagon"></use></svg></div>
+    ALE<span style="color:var(--red)">.</span>INK
+  </div>
+
+  <div class="bottom-nav" role="navigation" aria-label="Secciones del panel">
+    <button class="bnav-item active" onclick="switchTab('quotes')" id="btn-quotes" aria-current="page">
+      <div class="bnav-pip" id="pip-quotes"></div>
+      <div class="bnav-icon"><svg class="icon"><use href="#i-clipboard"></use></svg></div>
+      <div class="bnav-label"><span class="lbl-s">Cotiz.</span><span class="lbl-l">Cotizaciones</span></div>
+    </button>
+    <button class="bnav-item" onclick="switchTab('sessions')" id="btn-sessions">
+      <div class="bnav-icon"><svg class="icon"><use href="#i-calendar"></use></svg></div>
+      <div class="bnav-label">Sesiones</div>
+    </button>
+    <button class="bnav-item" onclick="switchTab('stats')" id="btn-stats">
+      <div class="bnav-icon"><svg class="icon"><use href="#i-bar-chart"></use></svg></div>
+      <div class="bnav-label"><span class="lbl-s">Stats</span><span class="lbl-l">Estadísticas</span></div>
+    </button>
+    <button class="bnav-item" onclick="switchTab('settings')" id="btn-settings">
+      <div class="bnav-icon"><svg class="icon"><use href="#i-settings"></use></svg></div>
+      <div class="bnav-label">Ajustes</div>
+    </button>
+  </div>
+</div>
+</div>
+
+<!-- TOAST WRAP -->
+<div id="toastWrap" role="status" aria-live="polite"></div>
+
+<!-- CONFIRM DIALOG -->
+<div id="confirmOverlay">
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmBody" tabindex="-1">
+    <div class="confirm-icon" id="confirmIcon"><svg class="icon"><use href="#i-alert-triangle"></use></svg></div>
+    <div class="confirm-title" id="confirmTitle"></div>
+    <div class="confirm-body" id="confirmBody"></div>
+    <div class="confirm-actions">
+      <button class="confirm-btn-ok danger" id="confirmOk"></button>
+      <button class="confirm-btn-cancel" onclick="closeConfirm()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- PHOTO LIGHTBOX -->
+<div id="qdLightbox" role="dialog" aria-modal="true" aria-label="Imagen de referencia ampliada" onclick="closeLightbox()"><img id="qdLightboxImg" src="" alt="Referencia ampliada"/></div>
+
+<!-- QUOTE DETAIL MODAL -->
+<div class="modal-overlay" id="quoteModal" onclick="if(event.target===this)closeQuoteModal()">
+  <div class="modal" id="quoteModalSheet" role="dialog" aria-modal="true" aria-labelledby="quoteModalTitle" tabindex="-1">
+    <div class="modal-handle" id="quoteModalHandle"></div>
+    <div class="modal-head">
+      <div class="modal-title" id="quoteModalTitle">Cotización</div>
+      <button class="modal-close" onclick="closeQuoteModal()">Cerrar</button>
+    </div>
+    <div id="quoteModalBody"></div>
+  </div>
+</div>
+
+<!-- SESSION MODAL -->
+<div class="modal-overlay" id="sessModal" onclick="if(event.target===this)closeSessModal()">
+  <div class="modal" id="sessModalSheet" role="dialog" aria-modal="true" aria-labelledby="sessModalTitle" tabindex="-1">
+    <div class="modal-handle" id="sessModalHandle"></div>
+    <div class="modal-head">
+      <div class="modal-title" id="sessModalTitle">Nueva Sesión</div>
+      <button class="modal-close" onclick="closeSessModal()">Cerrar</button>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="sessName">Cliente *</label>
+      <input class="finp" id="sessName" placeholder="Nombre del cliente"/>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field" style="flex:1">
+        <label class="modal-label" for="sessDate">Fecha *</label>
+        <input class="finp" id="sessDate" type="date"/>
+      </div>
+      <div class="modal-field" style="flex:1">
+        <label class="modal-label" for="sessTime">Hora *</label>
+        <input class="finp" id="sessTime" type="time" value="10:00"/>
+      </div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field" style="flex:1">
+        <label class="modal-label" for="sessStyle">Estilo</label>
+        <select class="modal-select" id="sessStyle">
+          <option value="BLACKWORK">Blackwork</option>
+          <option value="FINE_LINE">Fine Line</option>
+          <option value="REALISMO">Realismo</option>
+          <option value="GEOMETRICO">Geométrico</option>
+          <option value="TRADITIONAL">Traditional</option>
+          <option value="WATERCOLOR">Watercolor</option>
+        </select>
+      </div>
+      <div class="modal-field" style="flex:1">
+        <label class="modal-label" for="sessDur">Duración (hrs)</label>
+        <input class="finp" id="sessDur" type="number" min="1" max="12" value="3" placeholder="hrs"/>
+      </div>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="sessZone">Zona del cuerpo</label>
+      <input class="finp" id="sessZone" placeholder="Ej: Antebrazo, Espalda..."/>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="sessPrice">Precio acordado ($)</label>
+      <input class="finp" id="sessPrice" type="number" placeholder="0"/>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="sessNotes">Notas internas</label>
+      <input class="finp" id="sessNotes" placeholder="Referencias, instrucciones especiales..."/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-approve" style="flex:1;justify-content:center" onclick="saveSess()">Guardar sesión →</button>
+    </div>
+    <button class="btn btn-reject" id="sessDeleteBtn" style="display:none;width:100%;justify-content:center;margin-top:10px" onclick="deleteSessFromModal()"><svg class="icon"><use href="#i-x"></use></svg> Cancelar y eliminar sesión</button>
+  </div>
+</div>
+
+<!-- ADD AVAILABILITY SLOT MODAL -->
+<div class="modal-overlay" id="slotModal" onclick="if(event.target===this)closeSlotModal()">
+  <div class="modal" id="slotModalSheet" role="dialog" aria-modal="true" aria-label="Agregar horario libre" tabindex="-1">
+    <div class="modal-handle" id="slotModalHandle"></div>
+    <div class="modal-head">
+      <div class="modal-title">Horario libre</div>
+      <button class="modal-close" onclick="closeSlotModal()">Cerrar</button>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Día</label>
+      <div class="slot-date-display" id="slotDate">—</div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field" style="flex:1">
+        <label class="modal-label" for="slotStart">Desde *</label>
+        <input class="finp" id="slotStart" type="time" value="15:00"/>
+      </div>
+      <div class="modal-field" style="flex:1">
+        <label class="modal-label" for="slotEnd">Hasta *</label>
+        <input class="finp" id="slotEnd" type="time" value="17:00"/>
+      </div>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="slotLabel">Etiqueta (opcional)</label>
+      <input class="finp" id="slotLabel" placeholder="Ej: tatu chico, flash, walk-in..."/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-approve" style="flex:1;justify-content:center" onclick="saveSlot()">Guardar horario →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SHARE CARD MODAL -->
+<div class="modal-overlay" id="shareModal" onclick="if(event.target===this)closeShareModal()">
+  <div class="modal" id="shareModalSheet" role="dialog" aria-modal="true" aria-label="Tarjeta para compartir" tabindex="-1">
+    <div class="modal-handle" id="shareModalHandle"></div>
+    <div class="modal-head">
+      <div class="modal-title">Tarjeta para compartir</div>
+      <button class="modal-close" onclick="closeShareModal()">Cerrar</button>
+    </div>
+    <div class="share-card" id="shareCardInner"></div>
+    <div class="modal-actions">
+      <button class="btn btn-approve" style="flex:1;justify-content:center" onclick="downloadShareCard()"><svg class="icon"><use href="#i-download"></use></svg> Descargar imagen</button>
+    </div>
+    <div class="pin-notice">Descárgala y súbela directo a tu historia de Instagram</div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  CONSTANTS & STORAGE KEY (must match ale.html's logic)
+// ═══════════════════════════════════════════════════════
+// Pega aquí la MISMA URL que en index.html (ver README-INSTALACION.txt)
+const ALEINK_API_URL = 'https://script.google.com/macros/s/AKfycbyZfIy-svbLtbLEjv4gvdxB_LejI_HR4eva35sr2D32yl-_TxiLAywiOTDM0dsi_KbOiw/exec';
+const STORAGE_KEY = 'aleink_quotes';
+const SESSIONS_KEY = 'aleink_sessions';
+const NOTIFS_KEY = 'aleink_notifs';
+const SETTINGS_KEY = 'aleink_settings';
+const PIN_KEY = 'aleink_pin';
+const AVAIL_KEY = 'aleink_availability';
+
+const STYLES_MAP = {
+  BLACKWORK:'Blackwork',FINE_LINE:'Fine Line',REALISMO:'Realismo',
+  GEOMETRICO:'Geométrico',TRADITIONAL:'Traditional',WATERCOLOR:'Watercolor'
+};
+
+const STYLE_COLORS = {
+  BLACKWORK:'var(--w)', FINE_LINE:'var(--blue)', REALISMO:'var(--red)',
+  GEOMETRICO:'var(--amber)', TRADITIONAL:'var(--green)', WATERCOLOR:'var(--purple)'
+};
+
+
+
+const DEFAULT_QUOTES = [
+  {id:'Q-001',name:'Camila F.',ig:'@camila.fb',wa:'+56 9 1234 5678',date:'2025-06-12',style:'REALISMO',zone:'Brazo completo',w:25,h:35,flash:'',concept:'Retrato felino realista, estilo blanco y negro con sombreado suave.',status:'pending',price:null,deposit:null},
+  {id:'Q-002',name:'Valentina M.',ig:'@vale.morales',wa:'+56 9 8765 4321',date:'2025-06-14',style:'BLACKWORK',zone:'Antebrazo',w:12,h:18,flash:'',concept:'Lobo geométrico minimalista, líneas finas y patrones triangulares.',status:'approved',price:90000,deposit:18000},
+  {id:'Q-003',name:'Diego F.',ig:'@diego.f',wa:'+56 9 5555 1212',date:'2025-06-09',style:'BLACKWORK',zone:'Pecho',w:20,h:20,flash:'',concept:'Cover-up de tatuaje antiguo, diseño blackwork denso.',status:'done',price:160000,deposit:32000},
+];
+
+const DEFAULT_SESSIONS = [
+  {id:'S-001',name:'Camila F.',date:'2025-06-17',time:'10:00',style:'REALISMO',zone:'Brazo completo',dur:4,price:185000,notes:'Retrato felino. Primera sesión de sleeve.',status:'upcoming'},
+  {id:'S-002',name:'Valentina M.',date:'2025-06-19',time:'14:00',style:'BLACKWORK',zone:'Antebrazo',dur:3,price:90000,notes:'Lobo geométrico. Abono recibido.',status:'upcoming'},
+  {id:'S-003',name:'Diego F.',date:'2025-06-10',time:'11:00',style:'BLACKWORK',zone:'Pecho',dur:5,price:160000,notes:'Cover-up blackwork.',status:'done'},
+];
+
+const DEFAULT_SETTINGS = {
+  wa:'+56 9 74369717',deposit:20,studioName:'ALE.INK',email:'ale@aleink.cl',
+  reminder72:true,reminder24:true,aftercare:true,autoWA:true
+};
+
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let QUOTES = [], SESSIONS = [], NOTIFICATIONS = [], SETTINGS = {...DEFAULT_SETTINGS}, AVAILABILITY = {};
+let currentTab = 'quotes';
+let quotesFilter = '';
+let selectedWeekDay = null;
+let editSessId = null;
+let pinBuffer = '';
+let unlocked = false;
+let sessionsSubTab = 'agenda';
+
+// ═══════════════════════════════════════════════════════
+//  PIN SYSTEM
+// ═══════════════════════════════════════════════════════
+function getPin() { return localStorage.getItem(PIN_KEY) || '1234'; }
+
+function pinPress(d) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += d;
+  updatePinDots();
+  if (pinBuffer.length === 4) {
+    setTimeout(() => {
+      if (pinBuffer === getPin()) {
+        unlocked = true;
+        const ls = document.getElementById('lockScreen');
+        ls.classList.add('unlocking');
+        sessionStorage.setItem('aleink_unlocked', '1');
+        setTimeout(() => { ls.style.display = 'none'; }, 420);
+        initApp();
+      } else {
+        document.querySelectorAll('.pin-dot').forEach(el => el.classList.add('err'));
+        setTimeout(() => {
+          document.querySelectorAll('.pin-dot').forEach(el => { el.classList.remove('err', 'filled'); });
+          pinBuffer = '';
+        }, 600);
+      }
+    }, 200);
+  }
+}
+
+function pinDel() {
+  pinBuffer = pinBuffer.slice(0, -1);
+  updatePinDots();
+}
+
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    const el = document.getElementById('pd' + i);
+    el.classList.toggle('filled', i < pinBuffer.length);
+  }
+  const st = document.getElementById('pinStatus');
+  if (st) st.textContent = pinBuffer.length + ' de 4 dígitos ingresados';
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+function initApp() {
+  loadAll();
+  renderTab();
+  setupStorageListener();
+  setupAutoRefresh();
+  renderNotifList();
+}
+
+function loadAll() {
+  // Load quotes — merge with localStorage (shared with main page)
+  const raw = localStorage.getItem(STORAGE_KEY);
+  QUOTES = raw ? JSON.parse(raw) : [...DEFAULT_QUOTES];
+  if (!raw) saveQuotes();
+
+  const sraw = localStorage.getItem(SESSIONS_KEY);
+  SESSIONS = sraw ? JSON.parse(sraw) : [...DEFAULT_SESSIONS];
+  if (!sraw) saveSessions();
+
+  const nraw = localStorage.getItem(NOTIFS_KEY);
+  NOTIFICATIONS = nraw ? JSON.parse(nraw) : [];
+
+  const straw = localStorage.getItem(SETTINGS_KEY);
+  SETTINGS = straw ? {...DEFAULT_SETTINGS, ...JSON.parse(straw)} : {...DEFAULT_SETTINGS};
+
+  const araw = localStorage.getItem(AVAIL_KEY);
+  AVAILABILITY = araw ? JSON.parse(araw) : {};
+}
+
+function saveQuotes() { localStorage.setItem(STORAGE_KEY, JSON.stringify(QUOTES)); }
+function saveSessions() { localStorage.setItem(SESSIONS_KEY, JSON.stringify(SESSIONS)); pushStateToServer(); }
+function saveSettings() { localStorage.setItem(SETTINGS_KEY, JSON.stringify(SETTINGS)); pushStateToServer(); }
+function saveNotifs() { localStorage.setItem(NOTIFS_KEY, JSON.stringify(NOTIFICATIONS)); }
+function saveAvailability() { localStorage.setItem(AVAIL_KEY, JSON.stringify(AVAILABILITY)); }
+
+// ── Empuja un cambio de cotización al backend (se sincroniza a todos los dispositivos) ──
+function pushQuoteToServer(quote) {
+  if (!ALEINK_API_URL || !quote) return;
+  try {
+    fetch(ALEINK_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'update', quote })
+    }).catch(() => {});
+  } catch (e) {}
+}
+
+// ── Empuja sesiones + configuración al backend (estado compartido) ──
+let _statePushTimer = null;
+function pushStateToServer() {
+  if (!ALEINK_API_URL) return;
+  // Agrupa cambios rápidos en un solo envío (evita spamear el servidor)
+  clearTimeout(_statePushTimer);
+  _statePushTimer = setTimeout(() => {
+    try {
+      fetch(ALEINK_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'saveState', sessions: SESSIONS, settings: SETTINGS })
+      }).catch(() => {});
+    } catch (e) {}
+  }, 600);
+}
+
+
+// ── Listen for changes from the main page ──
+function setupStorageListener() {
+  window.addEventListener('storage', (e) => {
+    if (e.key === STORAGE_KEY && e.newValue) {
+      const newQuotes = JSON.parse(e.newValue);
+      const oldIds = new Set(QUOTES.map(q => q.id));
+      const fresh = newQuotes.filter(q => !oldIds.has(q.id));
+      if (fresh.length) {
+        fresh.forEach(q => {
+          addNotif(`<svg class="icon"><use href="#i-sparkle"></use></svg> Nueva cotización de ${q.name}`, `${STYLES_MAP[q.style] || q.style} · ${q.zone} · ${q.w}×${q.h}cm`, 'new');
+        });
+        QUOTES = newQuotes;
+        showPulse();
+        if (currentTab === 'quotes') renderTab();
+      } else {
+        QUOTES = newQuotes;
+      }
+    }
+  });
+}
+
+// ── Poll every 5s as fallback (same-tab or mobile) ──
+let lastSeen = '';
+function setupAutoRefresh() {
+  setInterval(() => {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw && raw !== lastSeen) {
+      lastSeen = raw;
+      const newQ = JSON.parse(raw);
+      const oldIds = new Set(QUOTES.map(q => q.id));
+      const fresh = newQ.filter(q => !oldIds.has(q.id));
+      if (fresh.length) {
+        fresh.forEach(q => {
+          addNotif(`<svg class="icon"><use href="#i-sparkle"></use></svg> Nueva cotización de ${q.name}`, `${STYLES_MAP[q.style] || q.style} · ${q.zone} · ${q.w}×${q.h}cm`, 'new');
+        });
+        QUOTES = newQ;
+        showPulse();
+        if (currentTab === 'quotes') renderTab();
+        else updateBadges();
+      } else {
+        QUOTES = newQ;
+      }
+    }
+  }, 3000);
+  setInterval(syncFromServer, 5000);
+  syncFromServer();
+}
+
+// ── Trae cotizaciones enviadas desde CUALQUIER dispositivo (Google Sheets) ──
+async function syncFromServer(){
+  if(!ALEINK_API_URL) return;
+  try{
+    const res = await fetch(ALEINK_API_URL);
+    const serverQ = await res.json();
+    if(!Array.isArray(serverQ)) return;
+    const oldIds = new Set(QUOTES.map(q=>q.id));
+    const fresh = serverQ.filter(q=>q.id && !oldIds.has(q.id));
+    const serverIds = new Set(serverQ.map(q=>q.id));
+    const localOnly = QUOTES.filter(q=>!serverIds.has(q.id));
+    QUOTES = [...serverQ, ...localOnly];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(QUOTES)); // guarda sin re-empujar al server
+    if(fresh.length){
+      fresh.forEach(q=>{
+        addNotif(`<svg class="icon"><use href="#i-sparkle"></use></svg> Nueva cotización de ${q.name}`, `${STYLES_MAP[q.style]||q.style} · ${q.zone} · ${q.w}×${q.h}cm`, 'new');
+      });
+      showPulse();
+      if(currentTab==='quotes') renderTab();
+      else updateBadges();
+    }
+    // Trae sesiones + configuración compartidas (aprobar/agendar hecho en otro dispositivo)
+    await syncStateFromServer();
+  }catch(e){ /* sin conexión: sigue funcionando con localStorage */ }
+}
+
+// Lee sesiones + configuración compartidas desde el backend
+async function syncStateFromServer(){
+  if(!ALEINK_API_URL) return;
+  try{
+    const res = await fetch(ALEINK_API_URL + (ALEINK_API_URL.includes('?')?'&':'?') + 'state=1');
+    const st = await res.json();
+    if(!st || typeof st !== 'object') return;
+    let changed = false;
+    if(Array.isArray(st.sessions) && JSON.stringify(st.sessions) !== JSON.stringify(SESSIONS)){
+      SESSIONS = st.sessions;
+      localStorage.setItem(SESSIONS_KEY, JSON.stringify(SESSIONS)); // sin re-empujar
+      changed = true;
+    }
+    if(st.settings && Object.keys(st.settings).length){
+      const merged = {...SETTINGS, ...st.settings};
+      if(JSON.stringify(merged) !== JSON.stringify(SETTINGS)){
+        SETTINGS = merged;
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(SETTINGS)); // sin re-empujar
+        changed = true;
+      }
+    }
+    if(changed && currentTab !== 'quotes'){ if(typeof renderTab==='function') renderTab(); }
+    else if(changed){ updateBadges && updateBadges(); }
+  }catch(e){}
+}
+
+function showPulse() {
+  document.getElementById('pip-quotes').classList.add('show');
+  toast(`¡Nueva cotización recibida!`, '<svg class="icon"><use href="#i-sparkle"></use></svg>', 'success');
+}
+
+// ═══════════════════════════════════════════════════════
+//  NOTIFICATIONS
+// ═══════════════════════════════════════════════════════
+function addNotif(msg, sub, type) {
+  NOTIFICATIONS.unshift({id: Date.now(), msg, sub, type, time: new Date().toLocaleTimeString('es-CL', {hour:'2-digit',minute:'2-digit'}), read: false});
+  if (NOTIFICATIONS.length > 50) NOTIFICATIONS.pop();
+  saveNotifs();
+  updateBadges();
+  renderNotifList();
+}
+
+function updateBadges() {
+  const unread = NOTIFICATIONS.filter(n => !n.read).length;
+  const badge = document.getElementById('notifBadge');
+  if (unread > 0) {
+    badge.textContent = unread > 9 ? '9+' : unread;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+  const pending = QUOTES.filter(q => q.status === 'pending').length;
+  const pip = document.getElementById('pip-quotes');
+  if (pip) pip.classList.toggle('show', pending > 0);
+}
+
+function renderNotifList() {
+  const el = document.getElementById('notifList');
+  if (!el) return;
+  if (!NOTIFICATIONS.length) {
+    el.innerHTML = '<div class="nd-empty">Sin notificaciones</div>';
+    return;
+  }
+  el.innerHTML = NOTIFICATIONS.map(n => `
+    <div class="nd-item ${n.read ? '' : 'unread'}" onclick="markRead(${n.id})">
+      <div class="nd-icon">${n.type === 'new' ? '<svg class="icon"><use href="#i-sparkle"></use></svg>' : n.type === 'approved' ? '<svg class="icon"><use href="#i-check-circle"></use></svg>' : '<svg class="icon"><use href="#i-bell"></use></svg>'}</div>
+      <div class="nd-body">
+        <div class="nd-msg">${n.msg}</div>
+        ${n.sub ? `<div class="nd-msg" style="font-size:.75rem;color:var(--w60)">${n.sub}</div>` : ''}
+        <div class="nd-time">${n.time}</div>
+      </div>
+    </div>`).join('');
+}
+
+function markRead(id) {
+  const n = NOTIFICATIONS.find(x => x.id === id);
+  if (n) { n.read = true; saveNotifs(); updateBadges(); renderNotifList(); }
+}
+
+function clearNotifs() {
+  NOTIFICATIONS = [];
+  saveNotifs();
+  updateBadges();
+  renderNotifList();
+}
+
+function toggleNotifDrawer() {
+  document.getElementById('notifDrawer').classList.toggle('open');
+  document.getElementById('notifOverlay').classList.toggle('show');
+  NOTIFICATIONS.forEach(n => n.read = true);
+  saveNotifs();
+  updateBadges();
+  renderNotifList();
+}
+
+function closeNotifDrawer() {
+  document.getElementById('notifDrawer').classList.remove('open');
+  document.getElementById('notifOverlay').classList.remove('show');
+}
+
+// ═══════════════════════════════════════════════════════
+//  TAB ROUTING
+// ═══════════════════════════════════════════════════════
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.bnav-item').forEach(b => { b.classList.remove('active'); b.removeAttribute('aria-current'); });
+  const btn = document.getElementById('btn-' + tab);
+  btn.classList.add('active');
+  btn.setAttribute('aria-current', 'page');
+  if (tab === 'quotes') document.getElementById('pip-quotes').classList.remove('show');
+  renderTab();
+}
+
+function renderTab() {
+  const el = document.getElementById('mainContent');
+  if (currentTab === 'quotes') el.innerHTML = buildQuotesTab();
+  else if (currentTab === 'sessions') { el.innerHTML = buildSessionsTab(); if (sessionsSubTab === 'agenda') initMiniCal(); }
+  else if (currentTab === 'stats') { el.innerHTML = buildStatsTab(); animBars(); }
+  else if (currentTab === 'settings') el.innerHTML = buildSettingsTab();
+  updateBadges();
+  // Reinicia la transición de entrada en cada render (quitar+forzar
+  // reflow+volver a poner la clase, porque solo tenerla puesta ya no
+  // dispara la animación de nuevo si no cambia).
+  el.classList.remove('animating');
+  void el.offsetWidth;
+  el.classList.add('animating');
+}
+
+// ═══════════════════════════════════════════════════════
+//  QUOTES TAB
+// ═══════════════════════════════════════════════════════
+function buildQuotesTab() {
+  const pending = QUOTES.filter(q => q.status === 'pending').length;
+  const approved = QUOTES.filter(q => q.status === 'approved').length;
+  const total = QUOTES.length;
+  const rejectedN = QUOTES.filter(q => q.status === 'rejected').length;
+  const dep = QUOTES.filter(q => q.deposit).reduce((s, q) => s + q.deposit, 0);
+
+  let html = `
+  <div class="kpi-grid">
+    <div class="kpi amb"><div class="kpi-lbl">Pendientes</div><div class="kpi-val amb">${pending}</div><div class="kpi-sub">esperando respuesta</div></div>
+    <div class="kpi grn"><div class="kpi-lbl">Aprobadas</div><div class="kpi-val grn">${approved}</div><div class="kpi-sub">confirmadas</div></div>
+    <div class="kpi red"><div class="kpi-lbl">Total</div><div class="kpi-val">${total}</div><div class="kpi-sub">cotizaciones</div></div>
+    <div class="kpi blu"><div class="kpi-lbl">Abonos</div><div class="kpi-val blu money">$${fmtK(dep)}</div><div class="kpi-sub">recibidos</div></div>
+  </div>
+  <div class="pull-ind"><div class="pull-spinner" id="pullSpinner"></div><span id="pullTxt">Actualización automática activa</span></div>
+  <div class="section-head">
+    <div class="section-head-title">Cotizaciones</div>
+  </div>
+  <div class="filter-row">
+    <button class="filter-chip ${quotesFilter===''?'active':''}" aria-pressed="${quotesFilter===''}" onclick="setFilter('')">Todas · ${total}</button>
+    <button class="filter-chip ${quotesFilter==='pending'?'active':''}" aria-pressed="${quotesFilter==='pending'}" onclick="setFilter('pending')">Pendientes · ${pending}</button>
+    <button class="filter-chip ${quotesFilter==='approved'?'active':''}" aria-pressed="${quotesFilter==='approved'}" onclick="setFilter('approved')">Aprobadas · ${approved}</button>
+    <button class="filter-chip ${quotesFilter==='rejected'?'active':''}" aria-pressed="${quotesFilter==='rejected'}" onclick="setFilter('rejected')">Rechazadas · ${rejectedN}</button>
+  </div>`;
+
+  const data = quotesFilter ? QUOTES.filter(q => q.status === quotesFilter) : QUOTES;
+
+  if (!data.length) {
+    html += `<div class="empty-state"><div class="empty-icon"><svg class="icon"><use href="#i-inbox"></use></svg></div><div class="empty-txt">Sin cotizaciones</div></div>`;
+  } else {
+    html += '<div class="qcard-grid">';
+    data.forEach((q) => {
+      const i = QUOTES.indexOf(q);
+      const sn = STYLES_MAP[q.style] || q.style;
+      const refs = q.refs || [];
+      const thumb = refs.length
+        ? `<img src="${refs[0]}" alt="ref"/>${refs.length > 1 ? `<div class="qc-thumb-count">+${refs.length - 1}</div>` : ''}`
+        : '<svg class="icon"><use href="#i-palette"></use></svg>';
+      html += `<div class="qcard ${q.status}" id="qc-${q.id}" data-quote-idx="${i}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openQuoteDetail(${i})}" tabindex="0" role="button" aria-label="Ver cotización de ${esc(q.name)}, ${statusLabel(q.status)}">
+        <div class="qc-thumb">${thumb}</div>
+        <div class="qc-main">
+          <div class="qc-header">
+            <div class="qc-id">${q.id} · ${q.date}</div>
+            <div class="qc-status ${q.status}">${statusLabel(q.status)}</div>
+          </div>
+          <div class="qc-name">${esc(q.name)}</div>
+          <div class="qc-meta">${sn} · ${esc(q.zone) || 'Sin zona'} · ${q.w}×${q.h}cm</div>
+          <div class="qc-tags">
+            ${q.flash ? `<span class="qtag hi"><svg class="icon"><use href="#i-hexagon"></use></svg> Flash</span>` : ''}
+            ${q.price ? `<span class="qtag hi">$${fmtK(q.price)}</span>` : ''}
+          </div>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  html += '<div class="scroll-bottom-pad"></div>';
+  return html;
+}
+
+function setFilter(f) { quotesFilter = f; renderTab(); }
+
+function statusLabel(s) {
+  return {pending:'Pendiente', approved:'Aprobada', rejected:'Rechazada', done:'Completada'}[s] || s;
+}
+
+function rejectQ(i) {
+  showConfirm({
+    icon: '<svg class="icon"><use href="#i-x"></use></svg>',
+    title: '¿Rechazar cotización?',
+    body: `La cotización de ${QUOTES[i].name} quedará marcada como rechazada. Esto no se puede deshacer.`,
+    okLabel: 'Sí, rechazar',
+    onOk: () => {
+      QUOTES[i].status = 'rejected';
+      saveQuotes();
+      pushQuoteToServer(QUOTES[i]);
+      toast('Cotización rechazada', '<svg class="icon"><use href="#i-x"></use></svg>');
+      renderTab();
+    }
+  });
+}
+
+function cancelApprovedQ(i) {
+  const q = QUOTES[i];
+  const linkedSession = SESSIONS.find(s => s.name === q.name && s.status === 'upcoming');
+  showConfirm({
+    icon: '<svg class="icon"><use href="#i-phone-off"></use></svg>',
+    title: 'Cliente se bajó',
+    body: linkedSession
+      ? `Se cancelará la cotización de ${q.name} y también la sesión agendada el ${linkedSession.date} a las ${linkedSession.time}. El horario quedará libre.`
+      : `Se cancelará la cotización de ${q.name} y quedará marcada como rechazada.`,
+    okLabel: 'Cancelar y liberar',
+    onOk: () => {
+      q.status = 'rejected';
+      saveQuotes();
+      pushQuoteToServer(q);
+      if (linkedSession) {
+        SESSIONS = SESSIONS.filter(s => s.id !== linkedSession.id);
+        saveSessions();
+      }
+      toast(linkedSession ? 'Cotización cancelada · horario liberado' : 'Cotización cancelada', '<svg class="icon"><use href="#i-x"></use></svg>', 'warn');
+      renderQuoteDetail();
+      renderTab();
+    }
+  });
+}
+
+function deleteQuoteForever(i) {
+  const q = QUOTES[i];
+  showConfirm({
+    icon: '<svg class="icon"><use href="#i-trash"></use></svg>',
+    title: 'Eliminar definitivamente',
+    body: `Se eliminará la cotización ${q.id} de ${q.name} sin dejar ningún registro. Esta acción no se puede deshacer.`,
+    okLabel: 'Eliminar para siempre',
+    onOk: () => {
+      QUOTES.splice(i, 1);
+      saveQuotes();
+      closeQuoteModal();
+      toast('Cotización eliminada', '<svg class="icon"><use href="#i-trash"></use></svg>', 'warn');
+      renderTab();
+    }
+  });
+}
+
+function markDone(i) {
+  QUOTES[i].status = 'done';
+  saveQuotes();
+  pushQuoteToServer(QUOTES[i]);
+  toast('Marcada como completada', '<svg class="icon"><use href="#i-check-circle"></use></svg>', 'success');
+  renderTab();
+}
+
+function createSession(qid) {
+  const q = QUOTES.find(x => x.id === qid);
+  if (!q) return;
+  // Pre-fill session modal
+  document.getElementById('sessName').value = q.name;
+  document.getElementById('sessStyle').value = q.style;
+  document.getElementById('sessDur').value = 3;
+  document.getElementById('sessPrice').value = q.price || '';
+  document.getElementById('sessZone').value = q.zone || '';
+  document.getElementById('sessDate').value = getTodayStr();
+  document.getElementById('sessModalTitle').textContent = 'Agendar Sesión';
+  editSessId = null;
+  document.getElementById('sessDeleteBtn').style.display = 'none';
+  document.getElementById('sessModal').classList.add('open');
+  focusDialog('sessModalSheet', '#sessName');
+}
+
+function openWA(phone, name, style) {
+  const msg = encodeURIComponent(`Hola ${name}! Te escribo desde ${SETTINGS.studioName || 'ALE.INK'} respecto a tu cotización de ${style}.`);
+  window.open(`https://wa.me/${(phone || '').replace(/\D/g,'')}?text=${msg}`, '_blank');
+}
+
+function openWAq(i) {
+  const q = QUOTES[i];
+  if (!q) return;
+  openWA(q.wa, q.name, STYLES_MAP[q.style] || q.style);
+}
+
+// ═══════════════════════════════════════════════════════
+//  QUOTE DETAIL SHEET
+// ═══════════════════════════════════════════════════════
+let currentQuoteIdx = null;
+
+function openQuoteDetail(i) {
+  currentQuoteIdx = i;
+  renderQuoteDetail();
+  document.getElementById('quoteModalTitle').textContent = QUOTES[i].id;
+  document.getElementById('quoteModal').classList.add('open');
+  focusDialog('quoteModalSheet', '.modal-close');
+}
+
+function closeQuoteModal() {
+  document.getElementById('quoteModal').classList.remove('open');
+  restoreFocus();
+  resetSheetDrag('quoteModalSheet');
+  currentQuoteIdx = null;
+}
+
+function renderQuoteDetail() {
+  const i = currentQuoteIdx;
+  if (i === null || !QUOTES[i]) return;
+  const q = QUOTES[i];
+  const sn = STYLES_MAP[q.style] || q.style;
+  const refs = q.refs || [];
+  const waDigits = (q.wa || '').replace(/\D/g, '');
+
+  const photosHtml = refs.length ? `
+    <div class="qd-photos ${refs.length === 1 ? 'single' : ''}">
+      ${refs.map((r, idx) => `<div class="qd-photo" onclick="openLightbox(${i},${idx})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openLightbox(${i},${idx})}" tabindex="0" role="button" aria-label="Ver referencia ${idx + 1} en tamaño completo"><img src="${r}" alt="Referencia ${idx + 1}"/></div>`).join('')}
+    </div>` : '';
+
+  let actionsHtml = '';
+  if (q.status === 'pending') {
+    actionsHtml = `
+      <div class="qd-actions">
+        <div id="qdApproveForm" style="display:none;flex-direction:column;gap:10px">
+          <input class="finp" id="qdApprovePrice" type="number" placeholder="Precio total $CLP"/>
+          <div class="qd-actions-row">
+            <button class="btn btn-approve" onclick="approveFromDetail(${i})">Confirmar aprobación →</button>
+          </div>
+        </div>
+        <button class="btn btn-approve" id="qdApproveBtn" onclick="document.getElementById('qdApproveForm').style.display='flex';document.getElementById('qdApproveBtn').style.display='none';document.getElementById('qdRejectBtn').style.display='none'"><svg class="icon"><use href="#i-check"></use></svg> Aprobar cotización</button>
+        <div class="qd-actions-row" id="qdRejectBtn">
+          <button class="btn btn-reject" onclick="rejectQ(${i})" style="flex:1;justify-content:center"><svg class="icon"><use href="#i-x"></use></svg> Rechazar</button>
+          <button class="btn btn-wa" onclick="openWAq(${i})" style="flex:1;justify-content:center"><svg class="icon"><use href="#i-message-circle"></use></svg> WhatsApp</button>
+        </div>
+      </div>`;
+  } else if (q.status === 'approved') {
+    actionsHtml = `
+      <div class="qd-actions">
+        <button class="btn btn-dep" onclick="createSession('${q.id}');closeQuoteModal()"><svg class="icon"><use href="#i-calendar"></use></svg> Agendar sesión</button>
+        <div class="qd-actions-row">
+          <button class="btn btn-wa" onclick="openWAq(${i})" style="flex:1;justify-content:center"><svg class="icon"><use href="#i-message-circle"></use></svg> WhatsApp</button>
+          <button class="btn btn-done" onclick="markDone(${i});renderQuoteDetail()" style="flex:1;justify-content:center"><svg class="icon"><use href="#i-check"></use></svg> Hecho</button>
+        </div>
+        <button class="btn btn-reject" onclick="cancelApprovedQ(${i})" style="width:100%;justify-content:center"><svg class="icon"><use href="#i-x"></use></svg> Cliente se bajó — cancelar</button>
+      </div>`;
+  } else {
+    actionsHtml = `
+      <div class="qd-actions">
+        <button class="btn btn-wa" onclick="openWAq(${i})"><svg class="icon"><use href="#i-message-circle"></use></svg> Escribir por WhatsApp</button>
+      </div>`;
+  }
+  actionsHtml += `
+    <button class="btn btn-done" onclick="deleteQuoteForever(${i})" style="width:100%;justify-content:center;margin-top:10px;color:var(--w60)"><svg class="icon"><use href="#i-trash"></use></svg> Eliminar cotización definitivamente</button>`;
+
+  const priceHtml = q.price ? `
+    <div class="qd-section">
+      <div class="qd-price-box">
+        <div><div class="qd-price-lbl">Precio acordado</div><div class="qd-price-val">$${fmt(q.price)}</div></div>
+        <div style="text-align:right"><div class="qd-price-lbl">Abono (${SETTINGS.deposit}%)</div><div class="qd-price-val" style="font-size:1.3rem">$${fmt(q.deposit)}</div></div>
+      </div>
+    </div>` : '';
+
+  document.getElementById('quoteModalBody').innerHTML = `
+    <div class="qd-status-row">
+      <div class="qd-id">${q.id} · Recibida ${q.date}</div>
+      <div class="qc-status ${q.status}">${statusLabel(q.status)}</div>
+    </div>
+    ${photosHtml}
+    <div class="qd-section">
+      <div class="qd-name">${esc(q.name)}</div>
+    </div>
+    <div class="qd-section">
+      <div class="qd-section-lbl">Contacto</div>
+      <div class="qd-contact-grid">
+        <a href="https://wa.me/${waDigits}" target="_blank" class="qd-contact-card wa">
+          <span class="qd-contact-lbl">WhatsApp</span>
+          <span class="qd-contact-val">${esc(q.wa)}</span>
+        </a>
+        <a href="https://instagram.com/${(q.ig||'').replace('@','')}" target="_blank" class="qd-contact-card">
+          <span class="qd-contact-lbl">Instagram</span>
+          <span class="qd-contact-val">${esc(q.ig)}</span>
+        </a>
+      </div>
+    </div>
+    <div class="qd-section">
+      <div class="qd-section-lbl">Detalles del tatuaje</div>
+      <div class="qd-facts">
+        <span class="qd-fact hi">${sn}</span>
+        <span class="qd-fact">${esc(q.zone) || 'Sin especificar'}</span>
+        <span class="qd-fact">${q.w}×${q.h}cm</span>
+        ${q.flash ? `<span class="qd-fact hi"><svg class="icon"><use href="#i-hexagon"></use></svg> ${q.flash}</span>` : ''}
+      </div>
+    </div>
+    <div class="qd-section">
+      <div class="qd-section-lbl">Concepto</div>
+      <div class="qd-concept-box">${esc(q.concept)}</div>
+    </div>
+    ${priceHtml}
+    ${actionsHtml}
+  `;
+}
+
+function approveFromDetail(i) {
+  const p = parseInt(document.getElementById('qdApprovePrice')?.value);
+  if (!p || p < 1000) { toast('Ingresa un precio válido', '<svg class="icon"><use href="#i-alert-triangle"></use></svg>', 'warn'); return; }
+  QUOTES[i].status = 'approved';
+  QUOTES[i].price = p;
+  QUOTES[i].deposit = Math.round(p * (SETTINGS.deposit / 100) / 1000) * 1000;
+  saveQuotes();
+  pushQuoteToServer(QUOTES[i]);
+  addNotif(`<svg class="icon"><use href="#i-check-circle"></use></svg> Aprobaste ${QUOTES[i].id}`, `${QUOTES[i].name} · $${fmt(QUOTES[i].price)}`, 'approved');
+  toast(`${QUOTES[i].id} aprobada · Abono: $${fmt(QUOTES[i].deposit)}`, '<svg class="icon"><use href="#i-check-circle"></use></svg>', 'success');
+  renderQuoteDetail();
+  if (currentTab === 'quotes') renderTab();
+}
+
+function openLightbox(quoteIdx, photoIdx) {
+  const refs = QUOTES[quoteIdx]?.refs || [];
+  if (!refs[photoIdx]) return;
+  document.getElementById('qdLightboxImg').src = refs[photoIdx];
+  document.getElementById('qdLightbox').classList.add('open');
+}
+
+function closeLightbox() {
+  document.getElementById('qdLightbox').classList.remove('open');
+}
+
+makeSheetDraggable('quoteModalSheet', 'quoteModalHandle', closeQuoteModal);
+
+// ═══════════════════════════════════════════════════════
+//  SESSIONS TAB
+// ═══════════════════════════════════════════════════════
+function buildSessionsTab() {
+  if (sessionsSubTab === 'availability') return buildAvailabilityTab();
+
+  const now = new Date();
+  const upcoming = SESSIONS.filter(s => s.status === 'upcoming').sort((a,b) => a.date.localeCompare(b.date));
+  const past = SESSIONS.filter(s => s.status !== 'upcoming').sort((a,b) => b.date.localeCompare(a.date));
+
+  let html = `
+  <div class="subtab-row">
+    <button class="subtab-chip ${sessionsSubTab==='agenda'?'active':''}" aria-pressed="${sessionsSubTab==='agenda'}" onclick="switchSessionsSubTab('agenda')"><svg class="icon"><use href="#i-calendar"></use></svg> Agenda</button>
+    <button class="subtab-chip ${sessionsSubTab==='availability'?'active':''}" aria-pressed="${sessionsSubTab==='availability'}" onclick="switchSessionsSubTab('availability')"><svg class="icon"><use href="#i-hexagon"></use></svg> Disponibilidad</button>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi amb"><div class="kpi-lbl">Próximas</div><div class="kpi-val amb">${upcoming.length}</div></div>
+    <div class="kpi grn"><div class="kpi-lbl">Completadas</div><div class="kpi-val grn">${past.filter(s=>s.status==='done').length}</div></div>
+  </div>
+  <div class="cal-bar">
+    <button class="cal-today" onclick="calToday()">Hoy</button>
+    <button class="cal-arrow" onclick="calShiftDay(-1)" aria-label="Día anterior"><svg class="icon"><use href="#i-chev-l"></use></svg></button>
+    <button class="cal-arrow" onclick="calShiftDay(1)" aria-label="Día siguiente"><svg class="icon"><use href="#i-chev-r"></use></svg></button>
+    <div class="cal-range" id="calRange"></div>
+  </div>
+  <div class="cal-layout">
+    <div class="cal-side">
+      <div class="mini-cal" id="miniCal"></div>
+      <div class="cal-filters">
+        <div class="cf-title">Mis calendarios</div>
+        <div class="cf-list" role="group" aria-label="Filtrar sesiones por estilo">
+          ${Object.entries(STYLES_MAP).map(([k, v]) => `
+          <button class="cf-item" role="checkbox" aria-checked="${!CAL_HIDDEN.has(k)}" onclick="toggleCalFilter('${k}')">
+            <span class="cf-box" style="${CAL_HIDDEN.has(k) ? '' : 'background:' + STYLE_COLORS[k]}"><svg class="icon"><use href="#i-check"></use></svg></span>
+            ${v}
+          </button>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="cal-main">
+      <button class="add-sess-btn" onclick="openNewSess()"><svg class="icon"><use href="#i-plus"></use></svg> Nueva sesión</button>
+      <div class="sessions-list" id="sessList">`;
+
+  const base = selectedWeekDay ? SESSIONS.filter(s => s.date === selectedWeekDay) : [...upcoming, ...past];
+  const toShow = base.filter(s => !CAL_HIDDEN.has(s.style));
+
+  if (!toShow.length) {
+    html += `<div class="empty-state"><div class="empty-icon"><svg class="icon"><use href="#i-calendar"></use></svg></div><div class="empty-txt">${base.length ? 'Ocultas por los filtros' : selectedWeekDay ? 'Sin sesiones este día' : 'Sin sesiones registradas'}</div></div>`;
+  } else {
+    toShow.forEach(s => {
+      const dateObj = new Date(s.date + 'T12:00:00');
+      const day = dateObj.getDate();
+      const month = dateObj.toLocaleDateString('es-CL', {month:'short'}).replace('.','');
+      html += `<div class="sess-card" onclick="editSess('${s.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();editSess('${s.id}')}" tabindex="0" role="button" aria-label="Ver sesión de ${esc(s.name)}, ${day} de ${month}">
+        <div class="sess-date-box"><div class="sess-day">${day}</div><div class="sess-month">${month.toUpperCase()}</div></div>
+        <div class="sess-body">
+          <div class="sess-time"><svg class="icon"><use href="#i-clock"></use></svg> ${s.time} · ${s.dur}h${s.price?` · $${fmt(s.price)}`:''}${s.zone?` · ${esc(s.zone)}`:''}</div>
+          <div class="sess-name">${esc(s.name)}</div>
+          <div class="sess-style" style="color:${STYLE_COLORS[s.style]||'var(--red)'}">${STYLES_MAP[s.style]||s.style}</div>
+          ${s.notes?`<div style="font-size:.78rem;color:var(--w60);margin-top:4px">${esc(s.notes)}</div>`:''}
+        </div>
+        <div class="sess-status ${s.status}">${s.status==='upcoming'?'Próxima':s.status==='done'?'Hecha':'Cancelada'}</div>
+      </div>`;
+    });
+  }
+
+  html += '</div></div></div><div class="scroll-bottom-pad"></div>';
+  return html;
+}
+
+function switchSessionsSubTab(tab) {
+  sessionsSubTab = tab;
+  renderTab();
+  if (tab === 'agenda') initMiniCal();
+}
+
+// ── Mini calendario mensual ──
+const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+let calCursor = null; // primer día del mes visible
+
+function initMiniCal() {
+  const el = document.getElementById('miniCal');
+  if (!el) return;
+  if (!calCursor) {
+    const ref = selectedWeekDay ? new Date(selectedWeekDay + 'T12:00:00') : new Date();
+    calCursor = new Date(ref.getFullYear(), ref.getMonth(), 1);
+  }
+  const y = calCursor.getFullYear(), m = calCursor.getMonth();
+  const todayStr = getTodayStr();
+
+  // Sesiones por día (para los puntos de color, respetando filtros)
+  const byDay = {};
+  SESSIONS.forEach(s => {
+    if (CAL_HIDDEN.has(s.style)) return;
+    (byDay[s.date] = byDay[s.date] || []).push(s.style);
+  });
+
+  // Lunes como primer día de la semana
+  const first = new Date(y, m, 1);
+  const start = new Date(first);
+  start.setDate(first.getDate() - ((first.getDay() + 6) % 7));
+
+  let cells = '';
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    const ds = localYMD(d);
+    const out = d.getMonth() !== m;
+    const styles = byDay[ds] || [];
+    const dots = [...new Set(styles)].slice(0, 3)
+      .map(st => `<span class="mc-dot" style="background:${STYLE_COLORS[st] || 'var(--red)'}"></span>`).join('');
+    const cls = ['mc-day', out ? 'out' : '', ds === todayStr ? 'today' : '', ds === selectedWeekDay ? 'sel' : ''].filter(Boolean).join(' ');
+    const aria = `${d.getDate()} de ${MONTHS_ES[d.getMonth()].toLowerCase()}${styles.length ? `, ${styles.length} ${styles.length === 1 ? 'sesión' : 'sesiones'}` : ''}`;
+    cells += `<button class="${cls}" onclick="calSelectDay('${ds}')" aria-label="${aria}" aria-pressed="${ds === selectedWeekDay}"${ds === todayStr ? ' aria-current="date"' : ''}>${d.getDate()}<span class="mc-dots" aria-hidden="true">${dots}</span></button>`;
+  }
+
+  el.innerHTML = `
+    <div class="mc-head">
+      <div class="mc-title">${MONTHS_ES[m]} <span>${y}</span></div>
+      <div class="mc-nav">
+        <button class="cal-arrow" onclick="mcNav(-1)" aria-label="Mes anterior"><svg class="icon"><use href="#i-chev-l"></use></svg></button>
+        <button class="cal-arrow" onclick="mcNav(1)" aria-label="Mes siguiente"><svg class="icon"><use href="#i-chev-r"></use></svg></button>
+      </div>
+    </div>
+    <div class="mc-grid">
+      ${['Lu','Ma','Mi','Ju','Vi','Sá','Do'].map(d => `<div class="mc-dow">${d}</div>`).join('')}
+      ${cells}
+    </div>`;
+
+  // Rango en la barra superior
+  const range = document.getElementById('calRange');
+  if (range) {
+    if (selectedWeekDay) {
+      const n = (SESSIONS.filter(s => s.date === selectedWeekDay && !CAL_HIDDEN.has(s.style))).length;
+      range.innerHTML = `${dayLabel(selectedWeekDay)}<small>${n} ${n === 1 ? 'sesión' : 'sesiones'}</small>`;
+    } else {
+      const n = SESSIONS.filter(s => !CAL_HIDDEN.has(s.style)).length;
+      range.innerHTML = `Todas las sesiones<small>${n} en total</small>`;
+    }
+  }
+}
+
+function mcNav(delta) {
+  calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth() + delta, 1);
+  initMiniCal();
+}
+
+function calSelectDay(ds) {
+  selectedWeekDay = selectedWeekDay === ds ? null : ds;
+  if (selectedWeekDay) {
+    const d = new Date(ds + 'T12:00:00');
+    calCursor = new Date(d.getFullYear(), d.getMonth(), 1);
+  }
+  renderTab();
+}
+
+function calShiftDay(delta) {
+  const base = selectedWeekDay ? new Date(selectedWeekDay + 'T12:00:00') : new Date();
+  base.setDate(base.getDate() + delta);
+  selectedWeekDay = localYMD(base);
+  calCursor = new Date(base.getFullYear(), base.getMonth(), 1);
+  renderTab();
+}
+
+function calToday() {
+  const t = new Date();
+  selectedWeekDay = localYMD(t);
+  calCursor = new Date(t.getFullYear(), t.getMonth(), 1);
+  renderTab();
+}
+
+// ── Filtros por estilo (persistidos) ──
+const CAL_FILTERS_KEY = 'aleink_cal_hidden';
+let CAL_HIDDEN = new Set();
+try { CAL_HIDDEN = new Set(JSON.parse(localStorage.getItem(CAL_FILTERS_KEY) || '[]')); } catch(e) {}
+
+function toggleCalFilter(style) {
+  if (CAL_HIDDEN.has(style)) CAL_HIDDEN.delete(style); else CAL_HIDDEN.add(style);
+  localStorage.setItem(CAL_FILTERS_KEY, JSON.stringify([...CAL_HIDDEN]));
+  renderTab();
+}
+
+// ═══════════════════════════════════════════════════════
+//  AVAILABILITY ("tengo libre a las 5") — internal agenda + shareable card
+// ═══════════════════════════════════════════════════════
+function nextDays(n) {
+  const out = [];
+  const today = new Date();
+  for (let i = 0; i < n; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    out.push(localYMD(d));
+  }
+  return out;
+}
+
+function dayLabel(ds) {
+  const d = new Date(ds + 'T12:00:00');
+  const today = getTodayStr();
+  const tomorrow = nextDays(2)[1];
+  if (ds === today) return 'Hoy';
+  if (ds === tomorrow) return 'Mañana';
+  const wd = d.toLocaleDateString('es-CL', { weekday: 'long' });
+  const md = d.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' }).replace('.', '');
+  return `${wd.charAt(0).toUpperCase()}${wd.slice(1)} ${md}`;
+}
+
+function buildAvailabilityTab() {
+  const days = nextDays(7);
+  let html = `
+  <div class="subtab-row">
+    <button class="subtab-chip ${sessionsSubTab==='agenda'?'active':''}" aria-pressed="${sessionsSubTab==='agenda'}" onclick="switchSessionsSubTab('agenda')"><svg class="icon"><use href="#i-calendar"></use></svg> Agenda</button>
+    <button class="subtab-chip ${sessionsSubTab==='availability'?'active':''}" aria-pressed="${sessionsSubTab==='availability'}" onclick="switchSessionsSubTab('availability')"><svg class="icon"><use href="#i-hexagon"></use></svg> Disponibilidad</button>
+  </div>
+  <div class="avail-intro">
+    <div class="avail-intro-txt">Marca tus horarios libres y comparte una tarjeta lista para tu historia de Instagram.</div>
+    <button class="btn btn-approve avail-share-btn" onclick="openShareCard()"><svg class="icon"><use href="#i-share"></use></svg> Generar tarjeta para compartir</button>
+  </div>
+  <div class="avail-days">`;
+
+  days.forEach(ds => {
+    const slots = (AVAILABILITY[ds] || []).slice().sort((a, b) => a.start.localeCompare(b.start));
+    html += `
+    <div class="avail-day-card">
+      <div class="avail-day-head">
+        <div class="avail-day-lbl">${dayLabel(ds)}</div>
+        <button class="avail-add-btn" onclick="openAddSlot('${ds}')">+ Agregar hora</button>
+      </div>
+      ${slots.length ? `<div class="avail-slots">${slots.map(s => `
+        <div class="avail-slot">
+          <span class="avail-slot-time">${s.start} – ${s.end}</span>
+          ${s.label ? `<span class="avail-slot-label">${esc(s.label)}</span>` : ''}
+          <button class="avail-slot-rm" onclick="removeSlot('${ds}','${s.id}')"><svg class="icon"><use href="#i-x"></use></svg></button>
+        </div>`).join('')}</div>` : `<div class="avail-day-empty">Sin horarios libres marcados</div>`}
+    </div>`;
+  });
+
+  html += '</div><div class="scroll-bottom-pad"></div>';
+  return html;
+}
+
+let addSlotDate = null;
+
+function openAddSlot(ds) {
+  addSlotDate = ds;
+  document.getElementById('slotDate').textContent = dayLabel(ds);
+  document.getElementById('slotStart').value = '15:00';
+  document.getElementById('slotEnd').value = '17:00';
+  document.getElementById('slotLabel').value = '';
+  document.getElementById('slotModal').classList.add('open');
+  focusDialog('slotModalSheet', '#slotStart');
+}
+
+function closeSlotModal() {
+  document.getElementById('slotModal').classList.remove('open');
+  restoreFocus();
+  resetSheetDrag('slotModalSheet');
+}
+
+function saveSlot() {
+  const start = document.getElementById('slotStart').value;
+  const end = document.getElementById('slotEnd').value;
+  const label = document.getElementById('slotLabel').value.trim();
+  if (!start || !end) { toast('Ingresa hora de inicio y fin', '<svg class="icon"><use href="#i-alert-triangle"></use></svg>', 'warn'); return; }
+  if (end <= start) { toast('La hora de fin debe ser posterior a la de inicio', '<svg class="icon"><use href="#i-alert-triangle"></use></svg>', 'warn'); return; }
+  if (!AVAILABILITY[addSlotDate]) AVAILABILITY[addSlotDate] = [];
+  AVAILABILITY[addSlotDate].push({ id: 'sl-' + Date.now(), start, end, label });
+  saveAvailability();
+  closeSlotModal();
+  toast('Horario agregado', '<svg class="icon"><use href="#i-hexagon"></use></svg>', 'success');
+  renderTab();
+}
+
+function removeSlot(ds, id) {
+  if (!AVAILABILITY[ds]) return;
+  AVAILABILITY[ds] = AVAILABILITY[ds].filter(s => s.id !== id);
+  if (!AVAILABILITY[ds].length) delete AVAILABILITY[ds];
+  saveAvailability();
+  renderTab();
+}
+
+function openShareCard() {
+  const days = nextDays(7);
+  const withSlots = days.filter(ds => (AVAILABILITY[ds] || []).length);
+  if (!withSlots.length) {
+    toast('Agrega al menos un horario libre primero', '<svg class="icon"><use href="#i-alert-triangle"></use></svg>', 'warn');
+    return;
+  }
+  const rows = withSlots.map(ds => {
+    const slots = AVAILABILITY[ds].slice().sort((a, b) => a.start.localeCompare(b.start));
+    return `<div class="share-day-row">
+      <div class="share-day-name">${dayLabel(ds)}</div>
+      <div class="share-day-slots">${slots.map(s => `<span class="share-slot-pill">${s.start}${s.label ? ' · ' + esc(s.label) : ''}</span>`).join('')}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('shareCardInner').innerHTML = `
+    <div class="share-card-logo"><em>ALE</em>.INK</div>
+    <div class="share-card-title">Horarios<br>disponibles</div>
+    <div class="share-card-rows">${rows}</div>
+    <div class="share-card-footer">Escríbeme para agendar tu cita</div>
+  `;
+  document.getElementById('shareModal').classList.add('open');
+  focusDialog('shareModalSheet', '.modal-close');
+}
+
+function closeShareModal() {
+  document.getElementById('shareModal').classList.remove('open');
+  restoreFocus();
+  resetSheetDrag('shareModalSheet');
+}
+
+function downloadShareCard() {
+  const days = nextDays(7).filter(ds => (AVAILABILITY[ds] || []).length);
+  if (!days.length) { toast('No hay horarios para compartir', '<svg class="icon"><use href="#i-alert-triangle"></use></svg>', 'warn'); return; }
+
+  const W = 1080, H = 1920;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // Background
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#0c0c0c');
+  grad.addColorStop(1, '#080808');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle red corner glow
+  const glow = ctx.createRadialGradient(W * 0.85, H * 0.08, 10, W * 0.85, H * 0.08, 520);
+  glow.addColorStop(0, 'rgba(255,0,60,.22)');
+  glow.addColorStop(1, 'rgba(255,0,60,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, W, H);
+
+  // Logo
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ff003c';
+  ctx.font = '700 64px "Space Grotesk", sans-serif';
+  ctx.fillText('ALE', W / 2 - 70, 180);
+  ctx.fillStyle = '#f0ede8';
+  ctx.fillText('.INK', W / 2 + 70, 180);
+
+  // Title
+  ctx.font = '700 88px "Space Grotesk", sans-serif';
+  ctx.fillStyle = '#f0ede8';
+  ctx.fillText('Horarios disponibles', W / 2, 300);
+
+  ctx.font = '400 34px "Space Grotesk", sans-serif';
+  ctx.fillStyle = 'rgba(240,237,232,.6)';
+  ctx.fillText('Escríbeme para agendar tu cita', W / 2, 360);
+
+  // Day rows
+  let y = 480;
+  const rowGap = days.length > 5 ? 190 : 230;
+  days.forEach(ds => {
+    const slots = AVAILABILITY[ds].slice().sort((a, b) => a.start.localeCompare(b.start));
+    ctx.textAlign = 'left';
+    ctx.font = '700 52px "Space Grotesk", sans-serif';
+    ctx.fillStyle = '#ff003c';
+    ctx.fillText(dayLabel(ds), 90, y);
+
+    let chipX = 90, chipY = y + 60;
+    ctx.font = '600 38px "Space Grotesk", sans-serif';
+    slots.forEach(s => {
+      const label = `${s.start}${s.label ? ' · ' + s.label : ''}`;
+      const textW = ctx.measureText(label).width;
+      const chipW = textW + 56;
+      if (chipX + chipW > W - 90) { chipX = 90; chipY += 76; }
+      ctx.fillStyle = 'rgba(255,255,255,.06)';
+      roundRect(ctx, chipX, chipY, chipW, 64, 32);
+      ctx.fill();
+      ctx.fillStyle = '#f0ede8';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, chipX + 28, chipY + 33);
+      ctx.textBaseline = 'alphabetic';
+      chipX += chipW + 16;
+    });
+    y += rowGap + (chipY > y + 60 ? 76 : 0);
+  });
+
+  // Footer
+  ctx.textAlign = 'center';
+  ctx.font = '400 36px "Space Grotesk", sans-serif';
+  ctx.fillStyle = 'rgba(240,237,232,.55)';
+  ctx.fillText(`${SETTINGS.wa || ''}`, W / 2, H - 120);
+
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = 'aleink-disponibilidad-' + getTodayStr() + '.png';
+  a.click();
+  toast('Imagen descargada', '<svg class="icon"><use href="#i-share"></use></svg>', 'success');
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function openNewSess() {
+  editSessId = null;
+  document.getElementById('sessModalTitle').textContent = 'Nueva Sesión';
+  document.getElementById('sessName').value = '';
+  document.getElementById('sessDate').value = getTodayStr();
+  document.getElementById('sessTime').value = '10:00';
+  document.getElementById('sessStyle').value = 'BLACKWORK';
+  document.getElementById('sessDur').value = '3';
+  document.getElementById('sessZone').value = '';
+  document.getElementById('sessPrice').value = '';
+  document.getElementById('sessNotes').value = '';
+  document.getElementById('sessDeleteBtn').style.display = 'none';
+  document.getElementById('sessModal').classList.add('open');
+  focusDialog('sessModalSheet', '#sessName');
+}
+
+
+function editSess(id) {
+  const s = SESSIONS.find(x => x.id === id);
+  if (!s) return;
+  editSessId = id;
+  document.getElementById('sessModalTitle').textContent = 'Editar Sesión';
+  document.getElementById('sessName').value = s.name;
+  document.getElementById('sessDate').value = s.date;
+  document.getElementById('sessTime').value = s.time;
+  document.getElementById('sessStyle').value = s.style;
+  document.getElementById('sessDur').value = s.dur;
+  document.getElementById('sessZone').value = s.zone || '';
+  document.getElementById('sessPrice').value = s.price || '';
+  document.getElementById('sessNotes').value = s.notes || '';
+  document.getElementById('sessDeleteBtn').style.display = 'block';
+  document.getElementById('sessModal').classList.add('open');
+  focusDialog('sessModalSheet', '#sessName');
+}
+
+function deleteSessFromModal() {
+  if (!editSessId) return;
+  const s = SESSIONS.find(x => x.id === editSessId);
+  if (!s) return;
+  showConfirm({
+    icon: '<svg class="icon"><use href="#i-calendar"></use></svg>',
+    title: '¿Cancelar esta sesión?',
+    body: `La sesión de ${s.name} del ${s.date} a las ${s.time} se eliminará y ese horario quedará libre en tu agenda.`,
+    okLabel: 'Sí, cancelar sesión',
+    onOk: () => {
+      SESSIONS = SESSIONS.filter(x => x.id !== editSessId);
+      saveSessions();
+      closeSessModal();
+      toast('Sesión eliminada · horario liberado', '<svg class="icon"><use href="#i-trash"></use></svg>', 'warn');
+      renderTab();
+    }
+  });
+}
+
+function saveSess() {
+  const name = document.getElementById('sessName').value.trim();
+  const date = document.getElementById('sessDate').value;
+  const time = document.getElementById('sessTime').value;
+  if (!name || !date) { toast('Nombre y fecha son obligatorios', '<svg class="icon"><use href="#i-alert-triangle"></use></svg>', 'warn'); return; }
+
+  const data = {
+    name, date, time,
+    style: document.getElementById('sessStyle').value,
+    dur: parseInt(document.getElementById('sessDur').value) || 3,
+    zone: document.getElementById('sessZone').value.trim(),
+    price: parseInt(document.getElementById('sessPrice').value) || null,
+    notes: document.getElementById('sessNotes').value.trim(),
+    status: 'upcoming'
+  };
+
+  if (editSessId) {
+    const idx = SESSIONS.findIndex(s => s.id === editSessId);
+    if (idx >= 0) { data.id = editSessId; data.status = SESSIONS[idx].status; SESSIONS[idx] = data; }
+  } else {
+    data.id = 'S-' + Date.now().toString().slice(-5);
+    SESSIONS.unshift(data);
+  }
+
+  saveSessions();
+  closeSessModal();
+  toast(editSessId ? 'Sesión actualizada' : 'Sesión creada', '<svg class="icon"><use href="#i-calendar"></use></svg>', 'success');
+  renderTab();
+}
+
+function closeSessModal() {
+  document.getElementById('sessModal').classList.remove('open');
+  restoreFocus();
+  resetSheetDrag('sessModalSheet');
+}
+
+// ═══════════════════════════════════════════════════════
+//  GESTIÓN DE FOCO EN DIÁLOGOS (accesibilidad)
+//  Al abrir: el foco entra al diálogo. Al cerrar: vuelve
+//  al elemento que lo abrió (patrón WAI-ARIA para dialogs).
+// ═══════════════════════════════════════════════════════
+let _lastFocus = null;
+
+function focusDialog(id, sel) {
+  _lastFocus = document.activeElement;
+  setTimeout(() => {
+    const root = document.getElementById(id);
+    if (!root) return;
+    const target = (sel && root.querySelector(sel)) || root;
+    target.focus({ preventScroll: true });
+  }, 80);
+}
+
+function restoreFocus() {
+  if (_lastFocus && typeof _lastFocus.focus === 'function' && document.contains(_lastFocus)) {
+    _lastFocus.focus({ preventScroll: true });
+  }
+  _lastFocus = null;
+}
+
+// ═══════════════════════════════════════════════════════
+//  BOTTOM SHEET — drag-to-dismiss (AirPods-style gesture)
+//  Reusable for any modal sheet (session, quote detail, etc.)
+// ═══════════════════════════════════════════════════════
+function makeSheetDraggable(sheetId, handleId, closeFn) {
+  const sheet = document.getElementById(sheetId);
+  const handle = document.getElementById(handleId);
+  if (!sheet || !handle) return;
+
+  let startY = 0, currentY = 0, dragging = false;
+
+  function onMove(e) {
+    if (!dragging) return;
+    const y = e.touches ? e.touches[0].clientY : e.clientY;
+    currentY = y;
+    const delta = Math.max(0, currentY - startY);
+    sheet.style.transform = `translateY(${delta}px)`;
+    if (delta > 4 && e.cancelable) e.preventDefault();
+  }
+  function onEnd() {
+    if (!dragging) return;
+    dragging = false;
+    sheet.classList.remove('dragging');
+    const delta = currentY - startY;
+    if (delta > 110) closeFn();
+    sheet.style.transform = '';
+    // Quita los listeners globales: mientras no se arrastra, el documento queda limpio
+    document.removeEventListener('touchmove', onMove, {passive:false});
+    document.removeEventListener('touchend', onEnd);
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onEnd);
+  }
+  function onStart(e) {
+    const y = e.touches ? e.touches[0].clientY : e.clientY;
+    const fromHandle = e.target === handle || handle.contains(e.target);
+    // Solo arrastra si el gesto nace en el "handle" del sheet (la barrita de arriba)
+    if (!fromHandle) return;
+    startY = y; currentY = y; dragging = true;
+    sheet.classList.add('dragging');
+    // Adjunta los listeners SOLO durante el arrastre, y solo cuando de verdad empezó en el handle
+    if (e.touches) {
+      document.addEventListener('touchmove', onMove, {passive:false});
+      document.addEventListener('touchend', onEnd);
+    } else {
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onEnd);
+    }
+  }
+
+  handle.addEventListener('touchstart', onStart, {passive:true});
+  handle.addEventListener('mousedown', onStart);
+}
+
+// ── Respaldo de tap para iOS standalone (web-app instalada en la pantalla de inicio) ──
+// En Safari standalone, el onclick inline sobre <div> a veces no dispara. Este listener
+// delegado captura el tap directamente y abre la cotización de forma fiable.
+(function setupTapFallback(){
+  const main = document.querySelector('.main') || document.body;
+  let tsX = 0, tsY = 0, moved = false;
+  main.addEventListener('touchstart', (e) => {
+    const t = e.touches && e.touches[0];
+    if (!t) return;
+    tsX = t.clientX; tsY = t.clientY; moved = false;
+  }, {passive:true});
+  main.addEventListener('touchmove', (e) => {
+    const t = e.touches && e.touches[0];
+    if (!t) return;
+    if (Math.abs(t.clientX - tsX) > 10 || Math.abs(t.clientY - tsY) > 10) moved = true;
+  }, {passive:true});
+  main.addEventListener('touchend', (e) => {
+    if (moved) return; // fue un scroll, no un tap
+    const card = e.target.closest && e.target.closest('.qcard[data-quote-idx]');
+    if (!card) return;
+    const idx = parseInt(card.getAttribute('data-quote-idx'), 10);
+    if (isNaN(idx)) return;
+    const modal = document.getElementById('quoteModal');
+    if (modal && modal.classList.contains('open')) return; // ya abierto
+    e.preventDefault();
+    openQuoteDetail(idx);
+  }, {passive:false});
+
+  // Desktop / mouse: click delegado (equivalente al tap móvil)
+  main.addEventListener('click', (e) => {
+    const card = e.target.closest && e.target.closest('.qcard[data-quote-idx]');
+    if (!card) return;
+    const idx = parseInt(card.getAttribute('data-quote-idx'), 10);
+    if (isNaN(idx)) return;
+    const modal = document.getElementById('quoteModal');
+    if (modal && modal.classList.contains('open')) return; // ya abierto (evita click sintético de iOS)
+    openQuoteDetail(idx);
+  });
+})();
+
+makeSheetDraggable('sessModalSheet', 'sessModalHandle', closeSessModal);
+makeSheetDraggable('slotModalSheet', 'slotModalHandle', closeSlotModal);
+makeSheetDraggable('shareModalSheet', 'shareModalHandle', closeShareModal);
+
+function resetSheetDrag(sheetId) {
+  const sheet = document.getElementById(sheetId);
+  if (sheet) { sheet.style.transform = ''; sheet.classList.remove('dragging'); }
+}
+
+// ═══════════════════════════════════════════════════════
+//  CUSTOM CONFIRM DIALOG (replaces native confirm())
+// ═══════════════════════════════════════════════════════
+let _confirmCallback = null;
+
+function showConfirm({ icon = '<svg class="icon"><use href="#i-alert-triangle"></use></svg>', title, body, okLabel = 'Eliminar', onOk }) {
+  document.getElementById('confirmIcon').innerHTML = icon;
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmBody').textContent = body;
+  document.getElementById('confirmOk').textContent = okLabel;
+  _confirmCallback = onOk;
+  document.getElementById('confirmOverlay').classList.add('open');
+  focusDialog('confirmOverlay', '.confirm-btn-cancel');
+}
+
+function closeConfirm() {
+  document.getElementById('confirmOverlay').classList.remove('open');
+  _confirmCallback = null;
+  restoreFocus();
+}
+
+function _confirmOk() {
+  const cb = _confirmCallback;
+  closeConfirm();
+  if (cb) cb();
+}
+
+// Wire up the OK button once (not inline, to avoid duplicate listeners)
+document.getElementById('confirmOk').addEventListener('click', _confirmOk);
+// Close on overlay click
+document.getElementById('confirmOverlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('confirmOverlay')) closeConfirm();
+});
+
+// ═══════════════════════════════════════════════════════
+//  THEME (light / dark)
+// ═══════════════════════════════════════════════════════
+function toggleTheme() {
+  const root = document.documentElement;
+  const isLight = root.getAttribute('data-theme') === 'light';
+  if (isLight) {
+    root.removeAttribute('data-theme');
+    localStorage.setItem('aleink_theme', 'dark');
+  } else {
+    root.setAttribute('data-theme', 'light');
+    localStorage.setItem('aleink_theme', 'light');
+  }
+  syncThemeToggle();
+}
+
+function syncThemeToggle() {
+  const t = document.getElementById('themeToggle');
+  if (t) t.setAttribute('aria-checked', document.documentElement.getAttribute('data-theme') === 'light');
+}
+syncThemeToggle();
+
+// ═══════════════════════════════════════════════════════
+//  STATS TAB
+// ═══════════════════════════════════════════════════════
+function buildStatsTab() {
+  const totalDep = QUOTES.filter(q => q.deposit).reduce((s,q) => s+q.deposit, 0);
+  const sessIncome = SESSIONS.filter(s => s.status==='done' && s.price).reduce((s,x) => s+x.price, 0);
+  const totalIncome = totalDep + sessIncome;
+  const conv = QUOTES.length ? Math.round(QUOTES.filter(q=>q.status==='approved'||q.status==='done').length/QUOTES.length*100) : 0;
+
+  // Style distribution
+  const styleCount = {};
+  QUOTES.forEach(q => { styleCount[q.style] = (styleCount[q.style]||0)+1; });
+  const totalQ = QUOTES.length || 1;
+  const styleRows = Object.entries(styleCount).sort((a,b)=>b[1]-a[1]).map(([k,v]) => ({
+    name: STYLES_MAP[k]||k, pct: Math.round(v/totalQ*100)
+  }));
+
+  // Monthly revenue from sessions (last 6 months)
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(); d.setMonth(d.getMonth()-i);
+    months.push({key: localYMD(d).slice(0,7), label: d.toLocaleDateString('es-CL',{month:'short'}).replace('.','').toUpperCase()});
+  }
+  const revenues = months.map(m => {
+    return SESSIONS.filter(s => s.date.startsWith(m.key) && s.status==='done' && s.price).reduce((s,x)=>s+x.price,0);
+  });
+  const maxRev = Math.max(...revenues, 1);
+
+  let html = `
+  <div class="sp" style="padding-bottom:0">
+    <div class="kpi-grid" style="padding:0 0 8px">
+      <div class="kpi red"><div class="kpi-lbl">Abonos</div><div class="kpi-val red">$${fmtK(totalDep)}</div></div>
+      <div class="kpi grn"><div class="kpi-lbl">Ingresos sesiones</div><div class="kpi-val grn">$${fmtK(sessIncome)}</div></div>
+      <div class="kpi amb"><div class="kpi-lbl">Conversión</div><div class="kpi-val amb">${conv}%</div></div>
+      <div class="kpi blu"><div class="kpi-lbl">Total citas</div><div class="kpi-val blu">${QUOTES.length}</div></div>
+    </div>
+  </div>
+  <div class="stats-wrap">
+    <div class="chart-card">
+      <div class="chart-lbl">Ingresos por mes (sesiones)</div>
+      <div class="bars" id="revBars">
+        ${months.map((m,i) => `<div class="bar-col">
+          <div class="bar-fill" data-v="$${fmtK(revenues[i])}" style="height:${revenues[i]?Math.max(Math.round(revenues[i]/maxRev*100),4):3}%;background:${revenues[i]?'var(--red)':'var(--bg4)'}"></div>
+          <div class="bar-lbl">${m.label}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-lbl">Distribución por estilo</div>
+      <div class="style-rows">
+        ${styleRows.length ? styleRows.map(r => `
+          <div class="style-row">
+            <div class="style-name">${r.name}</div>
+            <div class="style-bar-wrap"><div class="style-bar-fill" data-pct="${r.pct}" style="width:0%"></div></div>
+            <div class="style-pct">${r.pct}%</div>
+          </div>`).join('') : '<div style="font-family:var(--m);font-size:.68rem;color:var(--w60);letter-spacing:.2em">SIN DATOS</div>'}
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-lbl">Estado de cotizaciones</div>
+      <div class="style-rows">
+        ${[{label:'Pendientes',key:'pending',color:'var(--amber)'},{label:'Aprobadas',key:'approved',color:'var(--green)'},{label:'Completadas',key:'done',color:'var(--blue)'},{label:'Rechazadas',key:'rejected',color:'var(--w35)'}].map(r => {
+          const cnt = QUOTES.filter(q=>q.status===r.key).length;
+          const pct = totalQ ? Math.round(cnt/QUOTES.length*100)||0 : 0;
+          return `<div class="style-row">
+            <div class="style-name">${r.label}</div>
+            <div class="style-bar-wrap"><div class="style-bar-fill" data-pct="${pct}" style="width:0%;background:${r.color}"></div></div>
+            <div class="style-pct">${cnt}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  </div>
+  <div class="scroll-bottom-pad"></div>`;
+  return html;
+}
+
+function animBars() {
+  setTimeout(() => {
+    document.querySelectorAll('.style-bar-fill').forEach(el => {
+      el.style.width = (el.dataset.pct || 0) + '%';
+      el.style.transition = 'width .8s cubic-bezier(.16,1,.3,1)';
+    });
+  }, 100);
+}
+
+// ═══════════════════════════════════════════════════════
+//  SETTINGS TAB
+// ═══════════════════════════════════════════════════════
+function buildSettingsTab() {
+  return `
+  <div class="settings-wrap sp">
+    <div class="settings-section">
+      <div class="settings-sec-title">Datos del estudio</div>
+      <div class="field-group">
+        <label class="field-label" for="sStudio">Nombre del estudio</label>
+        <input class="finp" id="sStudio" value="${esc(SETTINGS.studioName)}"/>
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="sWA">WhatsApp de contacto</label>
+        <input class="finp" id="sWA" value="${esc(SETTINGS.wa)}"/>
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="sEmail">Email</label>
+        <input class="finp" id="sEmail" value="${esc(SETTINGS.email)}"/>
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="sDeposit">% de abono requerido</label>
+        <input class="finp" id="sDeposit" type="number" value="${SETTINGS.deposit}" style="max-width:100px"/>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-sec-title">PIN de acceso</div>
+      <div class="field-group">
+        <label class="field-label" for="sPin">Nuevo PIN (4 dígitos)</label>
+        <input class="finp" id="sPin" type="password" maxlength="4" placeholder="Nuevo PIN" style="max-width:120px"/>
+      </div>
+      <button class="export-btn" style="max-width:200px" onclick="changePin()"><svg class="icon"><use href="#i-lock"></use></svg> Cambiar PIN</button>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-sec-title">Automatizaciones</div>
+      ${[
+        {key:'autoWA', label:'WhatsApp automático', sub:'Notificación al recibir cotización'},
+        {key:'reminder72', label:'Recordatorio 72h', sub:'Enviado al cliente por WA'},
+        {key:'reminder24', label:'Instrucciones 24h antes', sub:'Email + WA con cuidados previos'},
+        {key:'aftercare', label:'Aftercare automático', sub:'Enviado 1h después de la sesión'},
+      ].map(s => `
+        <div class="setting-row">
+          <div class="sr-left"><div class="sr-title">${s.label}</div><div class="sr-sub">${s.sub}</div></div>
+          <button class="toggle ${SETTINGS[s.key]?'on':''}" id="tog-${s.key}" role="switch" aria-checked="${!!SETTINGS[s.key]}" aria-label="${s.label}" onclick="toggleSetting('${s.key}')"></button>
+        </div>`).join('')}
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-sec-title">Exportar datos</div>
+      <button class="export-btn" onclick="exportCSV()"><svg class="icon"><use href="#i-bar-chart"></use></svg> Exportar cotizaciones CSV</button>
+      <button class="export-btn" onclick="exportSessionsCSV()"><svg class="icon"><use href="#i-calendar"></use></svg> Exportar sesiones CSV</button>
+      <button class="export-btn" style="color:var(--red);background:var(--red3)" onclick="resetData()"><svg class="icon"><use href="#i-trash"></use></svg> Restablecer datos (demo)</button>
+    </div>
+
+    <button class="save-btn" onclick="saveSettingsUI()">Guardar configuración →</button>
+  </div>
+  <div class="scroll-bottom-pad"></div>`;
+}
+
+function toggleSetting(key) {
+  SETTINGS[key] = !SETTINGS[key];
+  const el = document.getElementById('tog-' + key);
+  if (el) { el.classList.toggle('on', SETTINGS[key]); el.setAttribute('aria-checked', SETTINGS[key]); }
+}
+
+function saveSettingsUI() {
+  SETTINGS.studioName = document.getElementById('sStudio')?.value.trim() || SETTINGS.studioName;
+  SETTINGS.wa = document.getElementById('sWA')?.value.trim() || SETTINGS.wa;
+  SETTINGS.email = document.getElementById('sEmail')?.value.trim() || SETTINGS.email;
+  SETTINGS.deposit = parseInt(document.getElementById('sDeposit')?.value) || SETTINGS.deposit;
+  saveSettings();
+  toast('Configuración guardada', '<svg class="icon"><use href="#i-check-circle"></use></svg>', 'success');
+}
+
+function changePin() {
+  const np = document.getElementById('sPin')?.value.trim();
+  if (!np || np.length !== 4 || !/^\d+$/.test(np)) { toast('PIN debe ser 4 dígitos', '<svg class="icon"><use href="#i-alert-triangle"></use></svg>', 'warn'); return; }
+  localStorage.setItem(PIN_KEY, np);
+  document.getElementById('sPin').value = '';
+  toast('PIN actualizado', '<svg class="icon"><use href="#i-lock"></use></svg>', 'success');
+}
+
+function exportCSV() {
+  const headers = ['ID','Nombre','Instagram','WhatsApp','Estilo','Zona','Ancho','Alto','Concepto','Estado','Precio','Abono','Fecha'];
+  const rows = QUOTES.map(q => [q.id,q.name,q.ig,q.wa,q.style,q.zone||'',q.w,q.h,`"${q.concept.replace(/"/g,'""')}"`,q.status,q.price||'',q.deposit||'',q.date]);
+  const csv = [headers.join(','), ...rows.map(r=>r.join(','))].join('\n');
+  dlCSV(csv, 'aleink-cotizaciones');
+}
+
+function exportSessionsCSV() {
+  const headers = ['ID','Cliente','Fecha','Hora','Estilo','Zona','Duración','Precio','Notas','Estado'];
+  const rows = SESSIONS.map(s => [s.id,s.name,s.date,s.time,s.style,s.zone||'',s.dur,s.price||'',`"${(s.notes||'').replace(/"/g,'""')}"`,s.status]);
+  const csv = [headers.join(','), ...rows.map(r=>r.join(','))].join('\n');
+  dlCSV(csv, 'aleink-sesiones');
+}
+
+function dlCSV(csv, name) {
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = name + '-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  toast('CSV exportado', '<svg class="icon"><use href="#i-bar-chart"></use></svg>', 'success');
+}
+
+function resetData() {
+  showConfirm({
+    icon: '<svg class="icon"><use href="#i-alert-triangle"></use></svg>',
+    title: 'Restablecer datos',
+    body: 'Se borrarán todas las cotizaciones y sesiones actuales y se cargarán los datos de ejemplo. Esto no se puede deshacer.',
+    okLabel: 'Sí, restablecer',
+    onOk: () => {
+      QUOTES = [...DEFAULT_QUOTES];
+      SESSIONS = [...DEFAULT_SESSIONS];
+      saveQuotes();
+      saveSessions();
+      toast('Datos restablecidos', '<svg class="icon"><use href="#i-check"></use></svg>');
+      renderTab();
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════
+function fmt(n) {
+  if (!n) return '0';
+  return Number(n).toLocaleString('es-CL');
+}
+
+function fmtK(n) {
+  if (!n) return '0';
+  if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000) return Math.round(n/1000) + 'K';
+  return fmt(n);
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function localYMD(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function getTodayStr() {
+  return localYMD(new Date());
+}
+
+function toast(msg, icon='<svg class="icon"><use href="#i-check"></use></svg>', type='') {
+  const wrap = document.getElementById('toastWrap');
+  const t = document.createElement('div');
+  t.className = `toast${type?' '+type:''}`;
+  t.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
+  wrap.appendChild(t);
+  setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(14px)';
+    t.style.transition = 'all .35s';
+    setTimeout(() => t.remove(), 380);
+  }, 3600);
+}
+
+// ═══════════════════════════════════════════════════════
+//  ALSO: Patch ale.html's submitQuote to write to localStorage
+//  This code runs in the ADMIN panel and seeds the storage
+//  so that ale.html can also read/write to it.
+//  In ale.html you need to add ONE LINE to submitQuote():
+//    localStorage.setItem('aleink_quotes', JSON.stringify(QUOTES));
+//  The patch instructions are shown via the info toast below.
+// ═══════════════════════════════════════════════════════
+
+// ── Limpieza de datos ficticios del localStorage ──
+// Si existen datos con IDs de ejemplo (S-001, Q-001, etc.) MEZCLADOS
+// con datos reales, se eliminan solo los de ejemplo.
+// FIX: antes esto corría siempre, apenas encontraba los IDs de ejemplo
+// los borraba — incluso si esos 3 registros eran TODO lo que había.
+// Resultado: quien abría el panel por primera vez veía 3 cotizaciones
+// y 3 sesiones de ejemplo, y con solo recargar la página una vez ya
+// estaban en cero, como si hubiera perdido datos reales. Ahora la
+// limpieza solo actúa cuando además de los IDs de ejemplo hay algún
+// registro real (de ale.html) — recién ahí tiene sentido "limpiar".
+// ── Accesibilidad: cerrar cualquier modal/drawer abierto con Escape ──
+// Comportamiento estándar esperado en cualquier diálogo — no existía.
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Escape') return;
+  if (document.getElementById('qdLightbox')?.classList.contains('open')) { closeLightbox(); return; }
+  if (document.getElementById('quoteModal')?.classList.contains('open')) { closeQuoteModal(); return; }
+  if (document.getElementById('sessModal')?.classList.contains('open')) { closeSessModal(); return; }
+  if (document.getElementById('slotModal')?.classList.contains('open')) { closeSlotModal(); return; }
+  if (document.getElementById('shareModal')?.classList.contains('open')) { closeShareModal(); return; }
+  if (document.getElementById('notifOverlay')?.classList.contains('show')) { closeNotifDrawer(); return; }
+});
+
+(function purgeDemo() {
+  try {
+    const FAKE_IDS = ['Q-001','Q-002','Q-003'];
+    const FAKE_SESSION_IDS = ['S-001','S-002','S-003'];
+    const qraw = localStorage.getItem('aleink_quotes');
+    if (qraw) {
+      const qs = JSON.parse(qraw);
+      const hasRealData = qs.some(q => !FAKE_IDS.includes(q.id));
+      if (hasRealData) {
+        const cleaned = qs.filter(q => !FAKE_IDS.includes(q.id));
+        if (cleaned.length !== qs.length) {
+          localStorage.setItem('aleink_quotes', JSON.stringify(cleaned));
+        }
+      }
+    }
+    const sraw = localStorage.getItem('aleink_sessions');
+    if (sraw) {
+      const ss = JSON.parse(sraw);
+      const hasRealSessions = ss.some(s => !FAKE_SESSION_IDS.includes(s.id));
+      if (hasRealSessions) {
+        const cleaned = ss.filter(s => !FAKE_SESSION_IDS.includes(s.id));
+        if (cleaned.length !== ss.length) {
+          localStorage.setItem('aleink_sessions', JSON.stringify(cleaned));
+        }
+      }
+    }
+  } catch(e) {}
+})();
+
+// Ocultar la pista del PIN de fábrica si el tatuador ya lo cambió
+if (getPin() !== '1234') {
+  const ph = document.getElementById('pinHint');
+  if (ph) ph.style.display = 'none';
+}
+
+// Already unlocked in same session?
+if (sessionStorage.getItem('aleink_unlocked') === '1') {
+  unlocked = true;
+  document.getElementById('lockScreen').style.display = 'none';
+  initApp();
+}
+
+</script>
+</body>
+</html>
