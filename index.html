@@ -655,6 +655,18 @@ body{overflow-x:hidden;max-width:100%;}
   .gal-header,.tes-header,.flash-section-header{
     flex-direction:column;align-items:flex-start;gap:12px;
   }
+
+  /* ── Marco gris del hero (.vid-lines) ──
+     El marco estaba a 32px del borde, pero el contenido a 24px, así que
+     el texto y los botones se salían del marco. Reducimos el marco a 16px
+     y damos al contenido un padding mayor (28px) para que TODO quede
+     dentro del marco con aire. */
+  .vid-lines{inset:16px;top:calc(16px + var(--nav));}
+  .hero-content-overlay{padding:calc(var(--nav) + 20px) 28px 70px;}
+  /* Botones a ancho completo dentro del marco, sin desbordar */
+  .hero-btns .btn-main,.hero-btns .btn-ghost{max-width:100%;}
+  /* "Briceño." (segunda línea) tenía un margen que lo empujaba fuera del marco */
+  .hero-h1 em{margin-left:0;}
 }
 
 /* 3 · Contraste / accesibilidad de textos tenues.
@@ -1514,12 +1526,34 @@ function wizNav(d){
   renderWizProg();renderWizStep();
 }
 
+// Normaliza cualquier formato de WhatsApp chileno a un formato estándar y legible.
+// Acepta: "+56974369717", "+569 74369717", "9 7436 9717", "974369717",
+// "56 9 7436 9717", con espacios, guiones, paréntesis, con o sin +56.
+// Devuelve { display: '+56 9 XXXX XXXX' (para guardar/mostrar),
+//            digits: '569XXXXXXXX'      (para el link wa.me) }
+function normalizeWhatsApp(raw){
+  let d = (raw||'').replace(/\D/g,''); // solo dígitos
+  // Quitar prefijos de país/salida si vienen
+  if(d.startsWith('0056')) d = d.slice(4);
+  else if(d.startsWith('56')) d = d.slice(2);
+  // A esta altura d debería ser el número local. Un celular chileno es 9 + 8 dígitos.
+  if(d.length===8) d = '9'+d;          // faltaba el 9 inicial
+  // Reconstruir con código país
+  const full = '56'+d;                 // ej: 56974369717
+  // Formato lindo para mostrar: +56 9 XXXX XXXX (si calza el patrón de celular)
+  let display = '+'+full;
+  const m = full.match(/^56(9)(\d{4})(\d{4})$/);
+  if(m) display = `+56 ${m[1]} ${m[2]} ${m[3]}`;
+  return { display, digits: full };
+}
+
 function submitQuote(){
   if(!WIZ.data.name.trim()){toast('Ingresa tu nombre','⚠️','warn');return}
   if(!WIZ.data.ig.trim()||WIZ.data.ig==='@'){toast('Ingresa tu Instagram','⚠️','warn');return}
   if(!WIZ.data.wa.trim()){toast('Ingresa tu WhatsApp','⚠️','warn');return}
+  const wa = normalizeWhatsApp(WIZ.data.wa);
   const id='Q-'+Date.now().toString().slice(-4);
-  const quote={id,name:WIZ.data.name,ig:WIZ.data.ig,wa:WIZ.data.wa,style:WIZ.data.style,zone:WIZ.data.zone,w:WIZ.data.w,h:WIZ.data.h,concept:WIZ.data.concept,refs:WIZ.data.refs,date:new Date().toLocaleDateString('es-CL',{day:'numeric',month:'short',year:'numeric'}),status:'pending',price:null,deposit:null,flash:WIZ.data.flash?.name||null};
+  const quote={id,name:WIZ.data.name,ig:WIZ.data.ig,wa:wa.display,style:WIZ.data.style,zone:WIZ.data.zone,w:WIZ.data.w,h:WIZ.data.h,concept:WIZ.data.concept,refs:WIZ.data.refs,date:new Date().toLocaleDateString('es-CL',{day:'numeric',month:'short',year:'numeric'}),status:'pending',price:null,deposit:null,flash:WIZ.data.flash?.name||null};
   QUOTES.unshift(quote);
   if(ALEINK_API_URL){
     try{
