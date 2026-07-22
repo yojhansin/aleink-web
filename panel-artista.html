@@ -393,7 +393,7 @@ body{background:var(--bg);color:var(--w);font-family:var(--s);font-weight:400;fo
 /* ── BOTTOM SHEET (AirPods-connect style) ── */
 .modal-overlay{position:fixed;inset:0;z-index:500;background:var(--overlay);backdrop-filter:blur(3px);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s var(--ease)}
 .modal-overlay.open{opacity:1;pointer-events:all}
-.modal{background:var(--surface-raised);width:100%;max-width:520px;max-height:88vh;overflow-y:auto;padding:8px 22px calc(28px + env(safe-area-inset-bottom,0px));position:relative;border-radius:var(--r-xl) var(--r-xl) 0 0;transform:translateY(100%);transition:transform .5s var(--sheet-ease);box-shadow:var(--shadow-sheet);touch-action:none}
+.modal{background:var(--surface-raised);width:100%;max-width:520px;max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 22px calc(28px + env(safe-area-inset-bottom,0px));position:relative;border-radius:var(--r-xl) var(--r-xl) 0 0;transform:translateY(100%);transition:transform .5s var(--sheet-ease);box-shadow:var(--shadow-sheet);touch-action:pan-y}
 .modal-overlay.open .modal{transform:translateY(0)}
 .modal.dragging{transition:none}
 .modal-handle{width:36px;height:5px;border-radius:var(--r-pill);background:var(--sheet-handle);margin:0 auto 18px;cursor:grab}
@@ -412,7 +412,10 @@ body{background:var(--bg);color:var(--w);font-family:var(--s);font-weight:400;fo
 /* ── QUOTE DETAIL SHEET ── */
 .qd-photos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
 .qd-photos.single{grid-template-columns:1fr}
-.qd-photo{aspect-ratio:1;border-radius:var(--r-lg);overflow:hidden;background:var(--tile-bg);cursor:zoom-in}
+/* Altura acotada: antes las fotos (aspect-ratio:1) ocupaban tanto que
+   empujaban los botones de aprobar/rechazar fuera de la vista. */
+.qd-photo{aspect-ratio:1;max-height:150px;border-radius:var(--r-lg);overflow:hidden;background:var(--tile-bg);cursor:zoom-in}
+.qd-photos.single .qd-photo{aspect-ratio:16/10;max-height:180px}
 .qd-photo img{width:100%;height:100%;object-fit:cover}
 .qd-status-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:10px}
 .qd-id{font-family:var(--m);font-size:.7rem;letter-spacing:.1em;color:var(--w60)}
