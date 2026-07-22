@@ -1476,7 +1476,7 @@ function handleFiles(files){
   Array.from(files).forEach(f=>{
     if(WIZ.data.refs.length>=2){toast('Máximo 2 referencias','⚠️','warn');return}
     if(!f.type.startsWith('image/')){toast('Solo se permiten imágenes','⚠️','warn');return}
-    compressImage(f,1000,0.75).then(dataUrl=>{WIZ.data.refs.push(dataUrl);rfresh()}).catch(()=>{toast('No se pudo procesar la imagen','⚠️','warn')});
+    compressImage(f,800,0.72).then(dataUrl=>{WIZ.data.refs.push(dataUrl);rfresh()}).catch(()=>{toast('No se pudo procesar la imagen','⚠️','warn')});
   });
 }
 function compressImage(file,maxDim,quality){
@@ -1547,6 +1547,37 @@ function normalizeWhatsApp(raw){
   return { display, digits: full };
 }
 
+// Envía la cotización al backend en dos etapas, para que las fotos (que son
+// pesadas: ~270 KB cada una en base64) nunca hagan fallar el envío completo.
+//   Etapa 1: la cotización SIN fotos → liviana, llega siempre.
+//   Etapa 2: cada foto por separado → si una falla, las demás y la cotización
+//            ya están a salvo.
+async function sendQuoteToServer(quote){
+  if(!ALEINK_API_URL) return;
+  const refs = Array.isArray(quote.refs) ? quote.refs : [];
+  // ── Etapa 1: cotización sin fotos ──
+  const liviana = {...quote, refs: []};
+  try{
+    await fetch(ALEINK_API_URL,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(liviana)
+    });
+  }catch(e){
+    return; // si ni la cotización llegó, no tiene sentido mandar fotos
+  }
+  // ── Etapa 2: las fotos, una por una ──
+  for(let i=0; i<refs.length; i++){
+    try{
+      await fetch(ALEINK_API_URL,{
+        method:'POST',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify({action:'addRef', id:quote.id, ref:refs[i], index:i})
+      });
+    }catch(e){ /* una foto que falla no arrastra a las demás */ }
+  }
+}
+
 function submitQuote(){
   if(!WIZ.data.name.trim()){toast('Ingresa tu nombre','⚠️','warn');return}
   if(!WIZ.data.ig.trim()||WIZ.data.ig==='@'){toast('Ingresa tu Instagram','⚠️','warn');return}
@@ -1556,9 +1587,12 @@ function submitQuote(){
   const quote={id,name:WIZ.data.name,ig:WIZ.data.ig,wa:wa.display,style:WIZ.data.style,zone:WIZ.data.zone,w:WIZ.data.w,h:WIZ.data.h,concept:WIZ.data.concept,refs:WIZ.data.refs,date:new Date().toLocaleDateString('es-CL',{day:'numeric',month:'short',year:'numeric'}),status:'pending',price:null,deposit:null,flash:WIZ.data.flash?.name||null};
   QUOTES.unshift(quote);
   if(ALEINK_API_URL){
-    try{
-      fetch(ALEINK_API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(quote)}).catch(()=>{});
-    }catch(e){}
+    // Enviamos en DOS etapas para que una foto pesada nunca tumbe la cotización:
+    //   1) la cotización sin fotos (liviana, siempre llega)
+    //   2) cada foto por separado, de a una
+    // Antes iba todo junto y con 2 fotos superaba el límite de Apps Script,
+    // perdiéndose la cotización completa.
+    sendQuoteToServer(quote);
   }
   try{
     localStorage.setItem('aleink_quotes',JSON.stringify(QUOTES));
