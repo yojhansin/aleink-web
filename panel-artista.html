@@ -1089,8 +1089,23 @@ async function syncFromServer(){
   if(!ALEINK_API_URL) return;
   try{
     const res = await fetch(ALEINK_API_URL);
-    const serverQ = await res.json();
+    let serverQ = await res.json();
     if(!Array.isArray(serverQ)) return;
+    // El backend (Google Sheets) puede devolver números o fechas donde
+    // esperamos texto (ej. un WhatsApp "56974369717" llega como número).
+    // Normalizamos los campos de texto a String para que el panel nunca
+    // truene al hacer .replace() u otras operaciones de texto.
+    serverQ = serverQ.map(q => ({
+      ...q,
+      id: q.id != null ? String(q.id) : q.id,
+      name: q.name != null ? String(q.name) : '',
+      ig: q.ig != null ? String(q.ig) : '',
+      wa: q.wa != null ? String(q.wa) : '',
+      concept: q.concept != null ? String(q.concept) : '',
+      zone: q.zone != null ? String(q.zone) : '',
+      style: q.style != null ? String(q.style) : '',
+      status: q.status != null ? String(q.status) : 'pending'
+    }));
     const oldIds = new Set(QUOTES.map(q=>q.id));
     const fresh = serverQ.filter(q=>q.id && !oldIds.has(q.id));
     const serverIds = new Set(serverQ.map(q=>q.id));
@@ -1428,7 +1443,7 @@ function renderQuoteDetail() {
   const q = QUOTES[i];
   const sn = STYLES_MAP[q.style] || q.style;
   const refs = q.refs || [];
-  const waDigits = (q.wa || '').replace(/\D/g, '');
+  const waDigits = String(q.wa || '').replace(/\D/g, '');
 
   const photosHtml = refs.length ? `
     <div class="qd-photos ${refs.length === 1 ? 'single' : ''}">
@@ -1494,7 +1509,7 @@ function renderQuoteDetail() {
           <span class="qd-contact-lbl">WhatsApp</span>
           <span class="qd-contact-val">${esc(q.wa)}</span>
         </a>
-        <a href="https://instagram.com/${(q.ig||'').replace('@','')}" target="_blank" class="qd-contact-card">
+        <a href="https://instagram.com/${String(q.ig||'').replace('@','')}" target="_blank" class="qd-contact-card">
           <span class="qd-contact-lbl">Instagram</span>
           <span class="qd-contact-val">${esc(q.ig)}</span>
         </a>
@@ -2393,7 +2408,7 @@ function changePin() {
 
 function exportCSV() {
   const headers = ['ID','Nombre','Instagram','WhatsApp','Estilo','Zona','Ancho','Alto','Concepto','Estado','Precio','Abono','Fecha'];
-  const rows = QUOTES.map(q => [q.id,q.name,q.ig,q.wa,q.style,q.zone||'',q.w,q.h,`"${q.concept.replace(/"/g,'""')}"`,q.status,q.price||'',q.deposit||'',q.date]);
+  const rows = QUOTES.map(q => [q.id,q.name,q.ig,q.wa,q.style,q.zone||'',q.w,q.h,`"${String(q.concept||'').replace(/"/g,'""')}"`,q.status,q.price||'',q.deposit||'',q.date]);
   const csv = [headers.join(','), ...rows.map(r=>r.join(','))].join('\n');
   dlCSV(csv, 'aleink-cotizaciones');
 }
