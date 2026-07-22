@@ -1095,17 +1095,28 @@ async function syncFromServer(){
     // esperamos texto (ej. un WhatsApp "56974369717" llega como número).
     // Normalizamos los campos de texto a String para que el panel nunca
     // truene al hacer .replace() u otras operaciones de texto.
-    serverQ = serverQ.map(q => ({
-      ...q,
-      id: q.id != null ? String(q.id) : q.id,
-      name: q.name != null ? String(q.name) : '',
-      ig: q.ig != null ? String(q.ig) : '',
-      wa: q.wa != null ? String(q.wa) : '',
-      concept: q.concept != null ? String(q.concept) : '',
-      zone: q.zone != null ? String(q.zone) : '',
-      style: q.style != null ? String(q.style) : '',
-      status: q.status != null ? String(q.status) : 'pending'
-    }));
+    serverQ = serverQ.map(q => {
+      // 'refs' llega desde Sheets como texto con los links separados por " | ".
+      // El panel espera un array, así que lo convertimos.
+      let refs = q.refs;
+      if (typeof refs === 'string') {
+        refs = refs.split('|').map(s => s.trim()).filter(Boolean);
+      } else if (!Array.isArray(refs)) {
+        refs = [];
+      }
+      return {
+        ...q,
+        refs,
+        id: q.id != null ? String(q.id) : q.id,
+        name: q.name != null ? String(q.name) : '',
+        ig: q.ig != null ? String(q.ig) : '',
+        wa: q.wa != null ? String(q.wa) : '',
+        concept: q.concept != null ? String(q.concept) : '',
+        zone: q.zone != null ? String(q.zone) : '',
+        style: q.style != null ? String(q.style) : '',
+        status: q.status != null ? String(q.status) : 'pending'
+      };
+    });
     const oldIds = new Set(QUOTES.map(q=>q.id));
     const fresh = serverQ.filter(q=>q.id && !oldIds.has(q.id));
     const serverIds = new Set(serverQ.map(q=>q.id));
