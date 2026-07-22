@@ -1153,7 +1153,7 @@ body{overflow-x:hidden;max-width:100%;}
 // Mientras esté vacío ('' ), el sitio sigue funcionando solo con
 // localStorage + WhatsApp, igual que antes.
 // ═══════════════════════════════════════════════════════════
-const ALEINK_API_URL = 'https://script.google.com/macros/s/AKfycbyZfIy-svbLtbLEjv4gvdxB_LejI_HR4eva35sr2D32yl-_TxiLAywiOTDM0dsi_KbOiw/exec';
+const ALEINK_API_URL = 'https://script.google.com/macros/s/AKfycbwS47_d15LaOzeePbkvyVWxmSw3q0Ai1xtXFt9Rgm7r_sSO3NjgN-H8akuS0jhSOks4Sg/exec';
 'use strict';
 
 // ═══════════════════ DATA ═══════════════════
@@ -1558,11 +1558,15 @@ async function sendQuoteToServer(quote){
   // ── Etapa 1: cotización sin fotos ──
   const liviana = {...quote, refs: []};
   try{
-    await fetch(ALEINK_API_URL,{
+    const res = await fetch(ALEINK_API_URL,{
       method:'POST',
       headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify(liviana)
     });
+    // Esperamos la respuesta real del servidor: así sabemos que la fila
+    // ya existe antes de mandar las fotos (si no, las fotos llegan primero
+    // y no encuentran a qué cotización pegarse).
+    await res.text();
   }catch(e){
     return; // si ni la cotización llegó, no tiene sentido mandar fotos
   }
