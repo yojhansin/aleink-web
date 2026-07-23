@@ -1615,7 +1615,7 @@ function submitQuote(){
   const sn=STYLES_DATA.find(s=>s.id===WIZ.data.style)?.label||WIZ.data.style;
   const msg=encodeURIComponent(`¡Hola! Acabo de enviar una cotización desde aleink.cl\n\nNombre: ${WIZ.data.name}\nEstilo: ${sn}\nZona: ${WIZ.data.zone}\nTamaño: ${WIZ.data.w}×${WIZ.data.h}cm\nConcepto: ${WIZ.data.concept}${WIZ.data.flash?'\nFlash: '+WIZ.data.flash.name:''}\nID: ${id}`);
   toast('¡Cotización enviada! Abriendo WhatsApp... 💬','✅','success');
-  setTimeout(()=>window.open(`https://wa.me/56974369717?text=${msg}`,'_blank'),800);
+  setTimeout(()=>window.open(`https://wa.me/56936371706?text=${msg}`,'_blank'),800);
   WIZ.step=0;WIZ.data={style:null,flash:null,zone:null,w:10,h:8,concept:'',refs:[],name:'',ig:'',wa:''};
   renderWizProg();renderWizStep();
 }
