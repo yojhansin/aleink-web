@@ -147,7 +147,12 @@ body.hov #CUR2{width:54px;height:54px;border-color:rgba(255,0,60,.8)}
 .gf-btn:hover{color:var(--w)}
 .gf-btn.a{color:var(--red);border-bottom-color:var(--red)}
 
-/* Mosaico portafolio */
+/* Mosaico portafolio
+   ── Desktop: grilla de 12 columnas con piezas de distinto tamaño.
+   ── Mobile:  2 columnas con relación de aspecto vertical (9:16), que es
+      como se graban los videos de tatuajes en el celular. Así el video se
+      ve COMPLETO y no recortado, que era el problema anterior con
+      grid-auto-rows fijo. */
 .portfolio-mosaic{display:grid;grid-template-columns:repeat(12,1fr);grid-auto-rows:72px;gap:3px;margin-top:28px}
 .pm-item{position:relative;overflow:hidden;background:var(--bg3);cursor:none;transition:transform .35s var(--ease);grid-column:span 4;grid-row:span 4}
 .pm-item:hover{transform:scale(1.015);z-index:2}
@@ -159,7 +164,12 @@ body.hov #CUR2{width:54px;height:54px;border-color:rgba(255,0,60,.8)}
 .pm-item:nth-child(6){grid-column:span 5;grid-row:span 4}
 .pm-item:nth-child(7){grid-column:span 4;grid-row:span 3}
 .pm-item:nth-child(8){grid-column:span 3;grid-row:span 3}
-/* ── INSTRUCCIÓN: dentro de cada .pm-item coloca: <img src="assets/img/tu-foto.jpg" class="pm-photo"> ── */
+/* A partir del 9º item se repite el patrón, para que agregar videos nuevos
+   no rompa el ritmo del mosaico. */
+.pm-item:nth-child(8n+9){grid-column:span 5;grid-row:span 5}
+.pm-item:nth-child(8n+10){grid-column:span 4;grid-row:span 3}
+.pm-item:nth-child(8n+11){grid-column:span 3;grid-row:span 3}
+.pm-item:nth-child(8n+12){grid-column:span 4;grid-row:span 4}
 .pm-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:grayscale(15%) contrast(1.05);transition:transform .6s var(--ease)}
 .pm-item:hover .pm-photo{transform:scale(1.04)}
 .pm-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--d);font-size:4rem;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.05)}
@@ -169,8 +179,31 @@ body.hov #CUR2{width:54px;height:54px;border-color:rgba(255,0,60,.8)}
 .pm-item:hover .pm-info{transform:none}
 .pm-style{font-family:var(--m);font-size:.58rem;letter-spacing:.28em;text-transform:uppercase;color:var(--red)}
 .pm-name{font-size:.88rem;margin-top:2px;font-weight:500}
-@media(max-width:1000px){.portfolio-mosaic{grid-template-columns:repeat(6,1fr);grid-auto-rows:100px}.pm-item{grid-column:span 3!important;grid-row:span 2!important}}
-@media(max-width:600px){.portfolio-mosaic{grid-template-columns:1fr 1fr;grid-auto-rows:160px;gap:2px}.pm-item{grid-column:span 1!important;grid-row:span 1!important}}
+
+/* Tablet */
+@media(max-width:1000px){
+  .portfolio-mosaic{grid-template-columns:repeat(6,1fr);grid-auto-rows:110px}
+  .pm-item{grid-column:span 3!important;grid-row:span 2!important}
+}
+
+/* ── MOBILE: 2 columnas verticales ──
+   aspect-ratio 9/16 hace que cada celda tenga la forma del video vertical,
+   así se aprecia completo. En mobile el overlay va siempre visible (no hay
+   hover en pantallas táctiles), si no el nombre de la pieza nunca se veía. */
+@media(max-width:600px){
+  .portfolio-mosaic{grid-template-columns:1fr 1fr;grid-auto-rows:auto;gap:4px}
+  .pm-item{grid-column:span 1!important;grid-row:span 1!important;aspect-ratio:9/16}
+  .pm-item:hover{transform:none}
+  .pm-overlay{opacity:1;background:linear-gradient(to top,rgba(8,8,8,.92) 0%,transparent 45%);padding:12px}
+  .pm-info{transform:none}
+  .pm-style{font-size:.5rem;letter-spacing:.2em}
+  .pm-name{font-size:.76rem}
+}
+
+/* Pantallas muy angostas: una sola columna, video a tamaño completo */
+@media(max-width:380px){
+  .portfolio-mosaic{grid-template-columns:1fr}
+}
 
 /* ─── SERVICES ─── */
 #services{background:var(--bg)}
@@ -275,9 +308,23 @@ body.hov #CUR2{width:54px;height:54px;border-color:rgba(255,0,60,.8)}
 .fc-body{padding:16px}
 .fc-name{font-family:var(--d);font-size:1.1rem;letter-spacing:.04em;margin-bottom:4px}
 .fc-sty{font-family:var(--m);font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--w50)}
-.fc-foot{padding:12px 16px;border-top:1px solid var(--w10);display:flex;align-items:center;justify-content:space-between}
-.fc-price{font-family:var(--d);font-size:1.4rem;color:var(--w)}
+.fc-foot{padding:12px 16px;border-top:1px solid var(--w10);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.fc-foot .btn-main{flex-shrink:0;white-space:nowrap}
+.fc-price{font-family:var(--d);font-size:1.4rem;color:var(--w);line-height:1}
 .fc-price em{color:var(--red);font-style:normal}
+.fc-btn{padding:9px 18px;font-size:.56rem;cursor:none}
+.fc-sold-txt{font-family:var(--m);font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;color:var(--w50)}
+
+/* ── Card del flash shop en celular ──
+   A una sola columna la card es ancha, así que el precio y el botón tienen
+   espacio de sobra. Se agranda un poco el botón para que sea cómodo de tocar
+   (el área táctil recomendada es ~44px de alto) y el precio queda con más
+   presencia, sin pegarse al borde. */
+@media(max-width:550px){
+  .fc-foot{padding:14px 16px}
+  .fc-price{font-size:1.6rem}
+  .fc-btn{padding:14px 24px;font-size:.62rem;min-height:44px}
+}
 
 /* ─── COTIZADOR ─── */
 #cotizar{background:var(--bg)}
@@ -397,129 +444,6 @@ body.hov #CUR2{width:54px;height:54px;border-color:rgba(255,0,60,.8)}
 .f-adm{font-family:var(--m);font-size:.5rem;letter-spacing:.15em;text-transform:uppercase;color:var(--w25);background:none;border:none;cursor:none;transition:color .25s}
 .f-adm:hover{color:var(--red)}
 
-/* ADMIN */
-#adminPanel{display:none}
-.adm-nav{background:var(--bg2);border-bottom:1px solid var(--w10);padding:0 40px;height:60px;display:flex;align-items:center;justify-content:space-between}
-@media(max-width:600px){.adm-nav{padding:0 16px}}
-.adm-logo{font-family:var(--d);font-size:1.4rem;letter-spacing:.08em;color:var(--w)}
-.adm-logo em{color:var(--red);font-style:normal}
-.adm-badge{font-family:var(--m);font-size:.5rem;letter-spacing:.25em;text-transform:uppercase;color:var(--w50);margin-left:10px}
-.adm-body{max-width:1100px;margin:0 auto;padding:36px 40px}
-@media(max-width:600px){.adm-body{padding:24px 16px}}
-.adm-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:36px}
-@media(max-width:700px){.adm-kpis{grid-template-columns:1fr 1fr}}
-.akpi{background:var(--bg2);border:1px solid var(--w10);padding:18px 20px;position:relative;overflow:hidden}
-.akpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--red)}
-.akpi-lbl{font-family:var(--m);font-size:.5rem;letter-spacing:.3em;text-transform:uppercase;color:var(--w50);margin-bottom:8px}
-.akpi-val{font-family:var(--d);font-size:2.4rem;color:var(--w)}
-.akpi-val.amb{color:var(--amber)}.akpi-val.grn{color:var(--green)}.akpi-val.red{color:var(--red)}
-.adm-tab-btn{font-family:var(--m);font-size:.52rem;letter-spacing:.2em;text-transform:uppercase;background:none;border:1px solid var(--w10);color:var(--w50);padding:8px 16px;cursor:none;transition:all .25s}
-.adm-tab-btn.active,.adm-tab-btn:hover{border-color:var(--red);color:var(--red)}
-.adm-sec-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-.adm-sec-title{font-family:var(--d);font-size:1.8rem;letter-spacing:.04em}
-.adm-sec-title em{color:var(--red);font-style:normal}
-.adm-action-btn{font-family:var(--m);font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;color:var(--w50);border:1px solid var(--w10);background:none;padding:8px 16px;cursor:none;transition:all .25s}
-.adm-action-btn:hover{border-color:rgba(255,255,255,.2);color:var(--w)}
-.adm-select{background:var(--bg3);border:1px solid var(--w10);color:var(--w);font-family:var(--m);font-size:.52rem;padding:8px 12px;outline:none}
-.adm-live-dot{display:flex;align-items:center;gap:6px;margin-left:14px}
-.live-pulse{width:8px;height:8px;border-radius:50%;background:var(--green);animation:lp 2s infinite}
-@keyframes lp{0%,100%{box-shadow:0 0 0 0 rgba(0,196,140,.6)}50%{box-shadow:0 0 0 6px rgba(0,196,140,0)}}
-.qcard{background:var(--bg2);border:1px solid var(--w10);border-left:3px solid;padding:24px;margin-bottom:12px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:start;transition:background .25s}
-.qcard.pending{border-left-color:var(--amber)}.qcard.approved{border-left-color:var(--green)}.qcard.done{border-left-color:var(--w25)}
-.qcard:hover{background:var(--bg3)}
-.qc-id{font-family:var(--m);font-size:.52rem;letter-spacing:.2em;color:var(--w50);margin-bottom:6px}
-.qc-name{font-size:1rem;font-weight:600;color:var(--w);margin-bottom:4px}
-.qc-contacts{font-family:var(--m);font-size:.56rem;color:var(--w50);display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px}
-.qc-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
-.qtag{font-family:var(--m);font-size:.48rem;letter-spacing:.15em;text-transform:uppercase;padding:3px 10px;background:var(--bg4);border:1px solid var(--w10);color:var(--w50)}
-.qtag.hi{border-color:rgba(255,0,60,.3);color:var(--red)}.qtag.grn{border-color:rgba(0,196,140,.3);color:var(--green)}
-.qc-concept{font-size:.84rem;color:var(--w50);font-style:italic;padding:10px 14px;background:var(--bg3);border:1px solid var(--w10);margin-bottom:10px}
-.qc-price-info{font-family:var(--m);font-size:.58rem;color:var(--green);letter-spacing:.1em}
-.qc-actions{display:flex;flex-direction:column;gap:8px;align-items:flex-end}
-.btn-approve{font-family:var(--m);font-size:.56rem;letter-spacing:.18em;text-transform:uppercase;color:#000;background:var(--green);border:none;padding:9px 18px;cursor:none;transition:all .25s;white-space:nowrap}
-.btn-approve:hover{background:#00f5b0}
-.btn-reject{font-family:var(--m);font-size:.56rem;letter-spacing:.18em;text-transform:uppercase;color:var(--red);background:rgba(255,0,60,.08);border:1px solid rgba(255,0,60,.2);padding:9px 18px;cursor:none;transition:all .25s}
-.btn-reject:hover{background:rgba(255,0,60,.2)}
-.btn-dep-view{font-family:var(--m);font-size:.56rem;letter-spacing:.18em;text-transform:uppercase;color:var(--w50);border:1px solid var(--w10);background:none;padding:9px 18px;cursor:none;transition:all .25s;white-space:nowrap}
-.btn-dep-view:hover{border-color:rgba(255,255,255,.2);color:var(--w)}
-.approve-form{display:none;flex-direction:column;gap:8px;align-items:flex-end}
-.approve-form.show{display:flex}
-.btn-confirm-app{font-family:var(--m);font-size:.56rem;letter-spacing:.18em;text-transform:uppercase;color:#000;background:var(--green);border:none;padding:8px 16px;cursor:none;white-space:nowrap}
-.input-setting{background:var(--bg3);border:1px solid var(--w10);color:var(--w);font-family:var(--s);font-size:.88rem;padding:10px 14px;outline:none;width:100%;transition:border-color .25s}
-.input-setting:focus{border-color:var(--red)}
-.setting-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--w10)}
-.sr-title{font-size:.88rem;font-weight:500;margin-bottom:3px}
-.sr-sub{font-family:var(--m);font-size:.5rem;color:var(--w50);letter-spacing:.08em}
-.toggle-switch{width:44px;height:24px;border-radius:12px;background:var(--bg4);border:1px solid var(--w25);cursor:none;position:relative;transition:background .3s,border-color .3s;flex-shrink:0}
-.toggle-switch::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--w50);transition:transform .3s,background .3s}
-.toggle-switch.on{background:rgba(0,196,140,.2);border-color:var(--green)}
-.toggle-switch.on::after{transform:translateX(20px);background:var(--green)}
-.save-settings-btn{font-family:var(--m);font-size:.58rem;letter-spacing:.25em;text-transform:uppercase;color:#000;background:var(--red);border:none;padding:12px 28px;cursor:none;margin-top:20px;transition:all .3s}
-.save-settings-btn:hover{background:var(--w)}
-.adm-week{display:grid;grid-template-columns:60px repeat(6,1fr);gap:2px;overflow-x:auto}
-.week-header{font-family:var(--m);font-size:.5rem;letter-spacing:.2em;text-transform:uppercase;color:var(--w50);padding:8px 6px;text-align:center;background:var(--bg3);border:1px solid var(--w10)}
-.week-time{font-family:var(--m);font-size:.48rem;color:var(--w50);padding:6px;text-align:center;background:var(--bg2);border:1px solid var(--w10);display:flex;align-items:center;justify-content:center}
-.week-slot{background:var(--bg2);border:1px solid var(--w10);min-height:48px;display:flex;align-items:center;justify-content:center;padding:4px}
-.week-slot.has-appt{background:rgba(255,0,60,.08);border-left:2px solid var(--red)}
-.slot-appt{width:100%}
-.sa-name{font-size:.78rem;font-weight:500}
-.sa-style{font-family:var(--m);font-size:.44rem;color:var(--red)}
-.slot-free{font-family:var(--m);font-size:.44rem;color:var(--w25);letter-spacing:.1em}
-.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
-.stat-card{background:var(--bg2);border:1px solid var(--w10);padding:20px;position:relative}
-.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--red)}
-.stat-card.green::before{background:var(--green)}
-.stat-card.amber::before{background:var(--amber)}
-.sc-lbl{font-family:var(--m);font-size:.5rem;letter-spacing:.28em;text-transform:uppercase;color:var(--w50);margin-bottom:8px}
-.sc-val{font-family:var(--d);font-size:2.4rem;margin-bottom:4px}
-.sc-change{font-family:var(--m);font-size:.5rem;color:var(--green)}
-.chart-wrap{background:var(--bg2);border:1px solid var(--w10);padding:24px;margin-bottom:12px}
-.chart-title{font-family:var(--m);font-size:.52rem;letter-spacing:.3em;text-transform:uppercase;color:var(--w50);margin-bottom:20px}
-.bars{display:flex;gap:12px;height:120px;align-items:flex-end}
-.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%}
-.bar-fill{background:var(--red);width:100%;transition:height .6s var(--ease);position:relative}
-.bar-fill:hover::after{content:attr(data-v);position:absolute;top:-24px;left:50%;transform:translateX(-50%);font-family:var(--m);font-size:.5rem;color:var(--w);white-space:nowrap}
-.bar-lbl{font-family:var(--m);font-size:.48rem;color:var(--w50)}
-.donut-row{display:flex;gap:32px;align-items:center;flex-wrap:wrap}
-.donut-svg{width:160px;height:160px;flex-shrink:0}
-.donut-legend{display:flex;flex-direction:column;gap:10px}
-.dl-item{display:flex;align-items:center;gap:10px}
-.dl-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
-.dl-name{font-family:var(--m);font-size:.54rem;color:var(--w50);flex:1}
-.dl-pct{font-family:var(--d);font-size:.9rem;color:var(--w)}
-.notif-item{display:flex;align-items:flex-start;gap:14px;padding:12px 0;border-bottom:1px solid var(--w10);cursor:none;transition:background .2s}
-.notif-item:hover{background:rgba(255,255,255,.02)}
-.ni-icon{font-size:1.2rem;flex-shrink:0;margin-top:2px}
-.ni-body{flex:1}
-.ni-title{font-size:.88rem;font-weight:500;margin-bottom:3px}
-.ni-sub{font-family:var(--m);font-size:.5rem;color:var(--w50)}
-.ni-time{font-family:var(--m);font-size:.48rem;color:var(--w25);white-space:nowrap}
-
-/* DEPOSIT */
-#depositScreen{position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;padding:20px}
-#depositScreen.open{display:flex}
-.dep-card{background:var(--bg2);border:1px solid var(--w10);max-width:520px;width:100%;padding:36px;max-height:90vh;overflow-y:auto;position:relative}
-.dep-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--red)}
-.dep-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
-.dep-logo{font-family:var(--d);font-size:1.6rem;letter-spacing:.08em}
-.dep-logo em{color:var(--red);font-style:normal}
-.dep-close{font-family:var(--m);font-size:.54rem;letter-spacing:.2em;text-transform:uppercase;color:var(--w50);background:none;border:1px solid var(--w10);padding:6px 12px;cursor:none;transition:all .25s}
-.dep-close:hover{border-color:var(--red);color:var(--red)}
-.dep-tag{font-family:var(--m);font-size:.5rem;letter-spacing:.35em;text-transform:uppercase;color:var(--red);margin-bottom:8px}
-.dep-id{font-family:var(--m);font-size:.62rem;color:var(--w50);margin-bottom:20px}
-.dep-albl{font-family:var(--m);font-size:.52rem;letter-spacing:.3em;text-transform:uppercase;color:var(--w50);margin-bottom:6px}
-.dep-amount{font-family:var(--d);font-size:4rem;color:var(--w);line-height:1;margin-bottom:24px}
-.dep-divider{height:1px;background:var(--w10);margin:20px 0}
-.dep-tlbl{font-family:var(--m);font-size:.54rem;letter-spacing:.3em;text-transform:uppercase;color:var(--w50);margin-bottom:12px}
-.dep-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)}
-.dep-rk{font-family:var(--m);font-size:.58rem;letter-spacing:.1em;color:var(--w50)}
-.dep-rv{font-size:.88rem;font-weight:500}
-.dep-upload{border:1px dashed var(--w25);padding:24px;text-align:center;cursor:none;transition:border-color .25s;margin:16px 0}
-.dep-upload:hover{border-color:rgba(255,0,60,.5)}
-.dep-confirm{width:100%;font-family:var(--m);font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:#000;background:var(--red);border:none;padding:16px;cursor:none;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:10px}
-.dep-confirm:hover{background:var(--w)}
-
-
 .pm-video {
   width: 100%;
   height: 100%;
@@ -568,7 +492,10 @@ img,video,iframe,svg{max-width:100%}
 @media(max-width:480px){
   .hero-h1{font-size:clamp(3rem,13vw,5rem)}
   .hero-btns{flex-direction:column;align-items:flex-start}
-  .btn-main,.btn-ghost{width:100%;justify-content:center}
+  /* Solo los botones del hero van a ancho completo. Antes esta regla
+     aplicaba a todos los .btn-main del sitio y deformaba el botón
+     "Reservar" de las cards del flash shop. */
+  .hero-btns .btn-main,.hero-btns .btn-ghost{width:100%;justify-content:center}
 }
 
 /* Testimonials en mobile */
@@ -687,7 +614,6 @@ body{overflow-x:hidden;max-width:100%;}
 <body>
 <div id="CUR"></div><div id="CUR2"></div>
 <div id="toastWrap"></div>
-<div id="depositScreen"><div class="dep-card" id="depCard"></div></div>
 <div class="float-cta"><a href="#cotizar" onclick="scrollToWiz()">Cotizar →</a></div>
 
 <!-- CLIENT VIEW -->
@@ -825,18 +751,33 @@ body{overflow-x:hidden;max-width:100%;}
     <div class="gal-filters rv" id="galFilters"></div>
 
     <!-- ═══════════════════════════════════════════════════════════
-         MOSAICO PORTAFOLIO — HTML5 ESTÁNDAR
-         Para agregar/cambiar fotos:
-           1. Pon tus fotos en:  assets/img/portfolio/
-           2. Cambia el src="" de cada <img> por el nombre de tu archivo
-           3. Cambia el data-style="" por el estilo (BLACKWORK, FINE_LINE, etc.)
-           4. Cambia el data-name="" por el nombre de la pieza
-         Para agregar más fotos: copia un bloque <div class="pm-item"> completo
+         MOSAICO PORTAFOLIO — "Trabajo healed"
+         ───────────────────────────────────────────────────────────
+         PARA AGREGAR UN VIDEO NUEVO:
+           1. Sube el archivo a:  assets/video/
+              Nombre sin espacios, sin tildes y sin ñ.
+              Ej:  dragon-brazo.mp4     (bien)
+                   Dragón Brazo.mp4     (mal)
+           2. Copia uno de los bloques <div class="pm-item"> de abajo
+              y pégalo al final, antes del </div> que cierra el mosaico.
+           3. Cambia tres cosas en el bloque nuevo:
+                src="assets/video/TU-ARCHIVO.mp4"
+                data-style="ESTILO"        ← ver lista abajo
+                <div class="pm-style">     ← nombre visible del estilo
+                <div class="pm-name">      ← nombre de la pieza
+
+         ESTILOS VÁLIDOS para data-style (respetar mayúsculas):
+           BLACKWORK · REALISMO · FINE_LINE
+           GEOMETRICO · TRADITIONAL · WATERCOLOR
+         Los botones de filtro se generan solos desde estos valores.
+
+         PESO: comprimir a menos de 5 MB por video (720p es suficiente).
+         Videos pesados hacen que la página cargue lenta en celular.
     ════════════════════════════════════════════════════════════ -->
 <div class="portfolio-mosaic rv" id="galGrid">
 
   <div class="pm-item" data-style="REALISMO">
-    <video src="assets/video/oso.mp4" class="pm-video" autoplay loop muted playsinline></video>
+    <video data-src="assets/video/oso.mp4" class="pm-video" loop muted playsinline preload="none"></video>
     <div class="pm-overlay">
       <div class="pm-info">
         <div class="pm-style">Realismo</div>
@@ -846,7 +787,7 @@ body{overflow-x:hidden;max-width:100%;}
   </div>
 
   <div class="pm-item" data-style="FINE_LINE">
-    <video src="assets/video/video.tatto.mp4" class="pm-video" autoplay loop muted playsinline></video>
+    <video data-src="assets/video/video.tatto.mp4" class="pm-video" loop muted playsinline preload="none"></video>
     <div class="pm-overlay">
       <div class="pm-info">
         <div class="pm-style">Fine Line</div>
@@ -856,7 +797,7 @@ body{overflow-x:hidden;max-width:100%;}
   </div>
 
   <div class="pm-item" data-style="REALISMO">
-    <video src="assets/video/realimso-a-color.mp4" class="pm-video" autoplay loop muted playsinline></video>
+    <video data-src="assets/video/realimso-a-color.mp4" class="pm-video" loop muted playsinline preload="none"></video>
     <div class="pm-overlay">
       <div class="pm-info">
         <div class="pm-style">Realismo</div>
@@ -866,7 +807,7 @@ body{overflow-x:hidden;max-width:100%;}
   </div>
 
   <div class="pm-item" data-style="REALISMO">
-    <video src="assets/video/realismo.mp4" class="pm-video" autoplay loop muted playsinline></video>
+    <video data-src="assets/video/realismo.mp4" class="pm-video" loop muted playsinline preload="none"></video>
     <div class="pm-overlay">
       <div class="pm-info">
         <div class="pm-style">Realismo</div>
@@ -876,7 +817,7 @@ body{overflow-x:hidden;max-width:100%;}
   </div>
 
   <div class="pm-item" data-style="GEOMETRICO">
-    <video src="assets/video/scarface.mp4" class="pm-video" autoplay loop muted playsinline></video>
+    <video data-src="assets/video/scarface.mp4" class="pm-video" loop muted playsinline preload="none"></video>
     <div class="pm-overlay">
       <div class="pm-info">
         <div class="pm-style">Geométrico</div>
@@ -886,7 +827,7 @@ body{overflow-x:hidden;max-width:100%;}
   </div>
 
   <div class="pm-item" data-style="BLACKWORK">
-    <video src="assets/video/valiomadres.mp4" class="pm-video" autoplay loop muted playsinline></video>
+    <video data-src="assets/video/valiomadres.mp4" class="pm-video" loop muted playsinline preload="none"></video>
     <div class="pm-overlay">
       <div class="pm-info">
         <div class="pm-style">Blackwork</div>
@@ -896,7 +837,7 @@ body{overflow-x:hidden;max-width:100%;}
   </div>
 
   <div class="pm-item" data-style="TRADITIONAL">
-    <video src="assets/video/buho.mp4" class="pm-video" autoplay loop muted playsinline></video>
+    <video data-src="assets/video/buho.mp4" class="pm-video" loop muted playsinline preload="none"></video>
     <div class="pm-overlay">
       <div class="pm-info">
         <div class="pm-style">Traditional</div>
@@ -906,11 +847,21 @@ body{overflow-x:hidden;max-width:100%;}
   </div>
 
   <div class="pm-item" data-style="WATERCOLOR">
-    <video src="assets/video/colores.mp4" class="pm-video" autoplay loop muted playsinline></video>
+    <video data-src="assets/video/colores.mp4" class="pm-video" loop muted playsinline preload="none"></video>
     <div class="pm-overlay">
       <div class="pm-info">
         <div class="pm-style">Acuarela</div>
         <div class="pm-name">Koi</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pm-item" data-style="BLACKWORK">
+    <video data-src="assets/video/sombra.mp4" class="pm-video" loop muted playsinline preload="none"></video>
+    <div class="pm-overlay">
+      <div class="pm-info">
+        <div class="pm-style">Blackwork</div>
+        <div class="pm-name">Sombras</div>
       </div>
     </div>
   </div>
@@ -980,22 +931,11 @@ body{overflow-x:hidden;max-width:100%;}
         <h2 class="sec-title rv" style="margin-bottom:0">Qué <em>dicen</em></h2>
       </div>
       <div class="rv" style="display:flex;align-items:center;gap:20px">
-        <div style="font-family:var(--m);font-size:.5rem;letter-spacing:.2em;text-transform:uppercase;color:var(--w50)">+400 clientes satisfechos</div>
         <div class="tes-nav">
           <button class="tes-btn" onclick="scrollTes(-1)">‹</button>
           <button class="tes-btn" onclick="scrollTes(1)">›</button>
         </div>
       </div>
-    </div>
-    <!-- Rating global -->
-    <div class="rv" style="display:flex;align-items:center;gap:16px;margin-bottom:40px;padding:16px 20px;background:var(--bg3);border:1px solid var(--w10);width:fit-content">
-      <div style="font-family:var(--d);font-size:2.8rem;line-height:1;color:var(--w)">5.0</div>
-      <div>
-        <div style="color:var(--red);font-size:.8rem;letter-spacing:3px">★★★★★</div>
-        <div style="font-family:var(--m);font-size:.5rem;letter-spacing:.2em;text-transform:uppercase;color:var(--w50);margin-top:4px">Rating promedio</div>
-      </div>
-      <div style="width:1px;height:40px;background:var(--w10);margin:0 8px"></div>
-      <div style="font-family:var(--m);font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;color:var(--w50)">Google & Instagram</div>
     </div>
     <!-- Cards de testimonios -->
     <div class="tes-track" id="tesTrack"></div>
@@ -1090,60 +1030,11 @@ body{overflow-x:hidden;max-width:100%;}
     </div>
     <div class="f-bot">
       <p>© 2025 ALE.INK Tattoo Studio · Viña del Mar, Chile · Todos los derechos reservados</p>
-      <button class="f-adm" onclick="toggleAdmin()">admin ↗</button>
+      <a class="f-adm" href="/panel" style="text-decoration:none">admin ↗</a>
     </div>
   </div>
 </footer>
 </div><!-- /clientView -->
-
-<!-- ═══════════════════════════════════════
-     ADMIN PANEL
-═══════════════════════════════════════ -->
-<div id="adminPanel">
-  <div class="adm-nav">
-    <div style="display:flex;align-items:center;gap:16px">
-      <span class="adm-logo"><em>ALE</em>.INK</span>
-      <span class="adm-badge">/ Panel Artista</span>
-      <div class="adm-live-dot"><span class="live-pulse"></span><span style="font-family:var(--m);font-size:.48rem;letter-spacing:.2em;text-transform:uppercase;color:var(--green)">EN VIVO</span></div>
-    </div>
-    <div style="display:flex;gap:10px;align-items:center">
-      <button class="adm-tab-btn active" id="tab-quotes" onclick="switchAdmTab('quotes')">Cotizaciones</button>
-      <button class="adm-tab-btn" id="tab-calendar" onclick="switchAdmTab('calendar')">Agenda</button>
-      <button class="adm-tab-btn" id="tab-stats" onclick="switchAdmTab('stats')">Estadísticas</button>
-      <button class="adm-tab-btn" id="tab-settings" onclick="switchAdmTab('settings')">Config</button>
-      <button class="btn-wback" onclick="toggleAdmin()" style="margin-left:8px">← Sitio</button>
-    </div>
-  </div>
-  <div class="adm-body">
-    <div class="adm-kpis" id="admKpis"></div>
-    <div id="admTab-quotes">
-      <div class="adm-sec-hd">
-        <div class="adm-sec-title">Cotizaciones <em>entrantes</em></div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <select id="admFilter" class="adm-select" onchange="renderAdmin()">
-            <option value="">Todas</option>
-            <option value="pending">Pendientes</option>
-            <option value="approved">Aprobadas</option>
-          </select>
-          <button class="adm-action-btn" onclick="exportCSV()">↓ Exportar CSV</button>
-        </div>
-      </div>
-      <div id="qlist"></div>
-    </div>
-    <div id="admTab-calendar" style="display:none">
-      <div class="adm-sec-hd"><div class="adm-sec-title">Agenda <em>semanal</em></div><button class="adm-action-btn" onclick="admToast('Sincronizando...','🔄')">↻ Sync Google Cal</button></div>
-      <div id="admCal"></div>
-    </div>
-    <div id="admTab-stats" style="display:none">
-      <div class="adm-sec-hd"><div class="adm-sec-title">Estadísticas <em>del estudio</em></div></div>
-      <div id="admStats"></div>
-    </div>
-    <div id="admTab-settings" style="display:none">
-      <div class="adm-sec-hd"><div class="adm-sec-title">Configuración <em>del sistema</em></div></div>
-      <div id="admSettings"></div>
-    </div>
-  </div>
-</div>
 
 <script>
 // ═══════════════════════════════════════════════════════════
@@ -1166,7 +1057,21 @@ const STYLES_DATA=[
   {id:'WATERCOLOR',label:'Acuarela',icon:'◈',desc:'Acuarelas sin contorno, pigmentos libres.'},
 ];
 
-/* ─── DISEÑOS DISPONIBLES─── */
+/* ═══════════════════════════════════════════════════════════
+   FLASH SHOP — DISEÑOS DISPONIBLES
+   ───────────────────────────────────────────────────────────
+   ATENCIÓN: los diseños de abajo son una PLANTILLA de ejemplo.
+   Los nombres, precios y tamaños hay que reemplazarlos por los
+   diseños flash reales del estudio antes de promocionar esta
+   sección, o quitar los que no correspondan.
+
+   Cada diseño:
+     imgSrc:''          → muestra un dibujo genérico (sin foto)
+     imgSrc:'assets/...'→ muestra la foto real del diseño
+     available:false    → aparece marcado como VENDIDO
+
+   Las fotos van en: assets/img/flash/
+   ═══════════════════════════════════════════════════════════ */
 const FLASHES=[
   {id:1,style:'BLACKWORK',name:'Serpiente Lunar',price:85000,size:'10×8cm',exclusive:true,available:true,imgSrc:'assets/img/453396997_485374110937225_538695615114059316_n.jpg'},
   {id:2,style:'BLACKWORK',name:'Cruz Ornamental',price:65000,size:'8×6cm',exclusive:false,available:true,imgSrc:'assets/img/475405098_17844098244419250_688202590210638446_n.jpg'},
@@ -1276,7 +1181,12 @@ document.getElementById('srvGrid').innerHTML=SERVICES.map(s=>`<div class="srv-ca
 function renderGallery(filter){
   document.querySelectorAll('.pm-item').forEach(item=>{
     const style = item.dataset.style || '';
-    item.style.display = (filter==='Todos' || style===filter) ? '' : 'none';
+    const visible = (filter==='Todos' || style===filter);
+    item.style.display = visible ? '' : 'none';
+    // Pausar el video de las piezas ocultas por el filtro: si no, siguen
+    // reproduciéndose sin que nadie las vea, gastando datos y batería.
+    const v = item.querySelector('.pm-video');
+    if(v){ visible ? v.play().catch(()=>{}) : v.pause(); }
   });
 }
 function filterGal(btn){
@@ -1293,6 +1203,36 @@ function filterGal(btn){
     return `<button class="gf-btn${i===0?' a':''}" data-f="${s}" onclick="filterGal(this)">${label}</button>`;
   }).join('');
   renderGallery('Todos');
+})();
+
+// ── Carga diferida de los videos del portafolio ──
+// Antes los 9 videos tenían autoplay y empezaban a descargarse todos juntos
+// al abrir la página (~23 MB). En celular con datos móviles eso hacía que la
+// landing tardara muchísimo. Ahora cada video se carga y arranca solo cuando
+// está por entrar en pantalla, y se pausa al salir para no gastar batería.
+(function lazyVideos(){
+  const vids = document.querySelectorAll('.pm-video[data-src]');
+  if(!vids.length) return;
+
+  // Si el navegador no soporta IntersectionObserver, cargar todo directo.
+  if(!('IntersectionObserver' in window)){
+    vids.forEach(v=>{ v.src = v.dataset.src; v.play().catch(()=>{}); });
+    return;
+  }
+
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      const v = entry.target;
+      if(entry.isIntersecting){
+        if(!v.src && v.dataset.src){ v.src = v.dataset.src; }
+        v.play().catch(()=>{}); // en iOS puede rechazar; no es crítico
+      } else {
+        v.pause();
+      }
+    });
+  }, {rootMargin:'200px 0px', threshold:0.1});
+
+  vids.forEach(v=>io.observe(v));
 })();
 
 // ═══════════════════ PRICES ═══════════════════
@@ -1346,7 +1286,7 @@ function renderShopContent(){
             </div>
             <div class="fc-foot">
               <div class="fc-price"><em>$</em>${fmt(f.price)}</div>
-              ${f.available?`<button class="btn-main" style="padding:8px 16px;font-size:.54rem;cursor:none" onclick="event.stopPropagation();pickFlash(${f.id})">Reservar</button>`:`<span style="font-family:var(--m);font-size:.5rem;color:var(--w50)">Vendido</span>`}
+              ${f.available?`<button class="btn-main fc-btn" onclick="event.stopPropagation();pickFlash(${f.id})">Reservar</button>`:`<span class="fc-sold-txt">Vendido</span>`}
             </div>
           </div>`).join('')}
       </div>
@@ -1527,7 +1467,7 @@ function wizNav(d){
 }
 
 // Normaliza cualquier formato de WhatsApp chileno a un formato estándar y legible.
-// Acepta: "+56974369717", "+569 74369717", "9 7436 9717", "974369717",
+// Acepta: "+56912345678", "+569 12345678", "9 1234 5678", "912345678",
 // "56 9 7436 9717", con espacios, guiones, paréntesis, con o sin +56.
 // Devuelve { display: '+56 9 XXXX XXXX' (para guardar/mostrar),
 //            digits: '569XXXXXXXX'      (para el link wa.me) }
@@ -1539,7 +1479,7 @@ function normalizeWhatsApp(raw){
   // A esta altura d debería ser el número local. Un celular chileno es 9 + 8 dígitos.
   if(d.length===8) d = '9'+d;          // faltaba el 9 inicial
   // Reconstruir con código país
-  const full = '56'+d;                 // ej: 56974369717
+  const full = '56'+d;                 // ej: 56912345678
   // Formato lindo para mostrar: +56 9 XXXX XXXX (si calza el patrón de celular)
   let display = '+'+full;
   const m = full.match(/^56(9)(\d{4})(\d{4})$/);
@@ -1618,185 +1558,6 @@ function submitQuote(){
   setTimeout(()=>window.open(`https://wa.me/56936371706?text=${msg}`,'_blank'),800);
   WIZ.step=0;WIZ.data={style:null,flash:null,zone:null,w:10,h:8,concept:'',refs:[],name:'',ig:'',wa:''};
   renderWizProg();renderWizStep();
-}
-
-// ═══════════════════ ADMIN ═══════════════════
-let adminOpen=false;
-function toggleAdmin(){adminOpen=!adminOpen;document.getElementById('clientView').style.display=adminOpen?'none':'block';document.getElementById('adminPanel').style.display=adminOpen?'block':'none';if(adminOpen)renderAdmin()}
-
-function switchAdmTab(tab){
-  ['quotes','calendar','stats','settings'].forEach(t=>{
-    const el=document.getElementById('admTab-'+t);const btn=document.getElementById('tab-'+t);
-    if(el) el.style.display=t===tab?'block':'none';
-    if(btn){btn.classList.toggle('active',t===tab)}
-  });
-  if(tab==='calendar') renderAdmCalendar();
-  if(tab==='stats') renderAdmStats();
-  if(tab==='settings') renderAdmSettings();
-}
-
-function renderAdmin(){renderAdmKpis();renderQList();}
-
-function renderAdmKpis(){
-  const p=QUOTES.filter(q=>q.status==='pending').length;
-  const a=QUOTES.filter(q=>q.status==='approved').length;
-  const dep=QUOTES.filter(q=>q.deposit).reduce((s,q)=>s+q.deposit,0);
-  document.getElementById('admKpis').innerHTML=`
-    <div class="akpi"><div class="akpi-lbl">Pendientes</div><div class="akpi-val amb">${p}</div></div>
-    <div class="akpi"><div class="akpi-lbl">Aprobadas</div><div class="akpi-val grn">${a}</div></div>
-    <div class="akpi"><div class="akpi-lbl">Total citas</div><div class="akpi-val">${QUOTES.length}</div></div>
-    <div class="akpi"><div class="akpi-lbl">Abonos recibidos</div><div class="akpi-val red">$${fmt(dep)}</div></div>`;
-}
-
-function renderQList(){
-  const el=document.getElementById('qlist');if(!el)return;el.innerHTML='';
-  const filter=document.getElementById('admFilter')?.value||'';
-  const data=filter?QUOTES.filter(q=>q.status===filter):QUOTES;
-  if(!data.length){el.innerHTML=`<div style="font-family:var(--m);font-size:.7rem;color:var(--w50);padding:48px 0;text-align:center">Sin cotizaciones.</div>`;return}
-  data.forEach((q)=>{
-    const i=QUOTES.indexOf(q);
-    const sn=STYLES_DATA.find(s=>s.id===q.style)?.label||q.style;
-    const c=document.createElement('div');c.className=`qcard ${q.status}`;
-    c.innerHTML=`<div>
-      <div class="qc-id">${q.id} · ${q.date}</div>
-      <div class="qc-name">${q.name}</div>
-      <div class="qc-contacts"><span>📱 ${q.wa}</span><span>IG ${q.ig}</span></div>
-      <div class="qc-tags"><span class="qtag hi">${sn}</span><span class="qtag">${q.zone||'—'}</span><span class="qtag">${q.w}×${q.h}cm</span>${q.flash?`<span class="qtag">⬡ ${q.flash}</span>`:''}<span class="qtag ${q.status==='approved'?'grn':''}">${q.status==='approved'?'✓ Aprobado':'⏳ Pendiente'}</span></div>
-      <div class="qc-concept">"${q.concept}"</div>
-      ${q.price?`<div class="qc-price-info">Precio: $${fmt(q.price)} · Abono: $${fmt(q.deposit)}</div>`:''}
-    </div>
-    <div class="qc-actions">
-      ${q.status==='pending'?`
-        <button class="btn-approve" onclick="tApproveForm(${i})">✓ Aprobar</button>
-        <div class="approve-form" id="apf${i}"><input class="finp" id="apfP${i}" type="number" placeholder="Precio total $" style="padding:9px 12px;font-size:.84rem"/><button class="btn-confirm-app" onclick="approveQ(${i})">Confirmar →</button></div>
-        <button class="adm-action-btn" onclick="openWA('${q.wa}','${q.name}','${sn}')">📱 WA</button>
-        <button class="btn-reject" onclick="rejectQ(${i})">✕ Rechazar</button>
-      `:`
-        <button class="btn-dep-view" onclick="openDep('${q.id}')">Ver transacción →</button>
-        <button class="adm-action-btn" onclick="openWA('${q.wa}','${q.name}','${sn}')">📱 WA</button>
-      `}
-    </div>`;
-    el.appendChild(c);
-  });
-}
-
-function tApproveForm(i){document.getElementById(`apf${i}`)?.classList.toggle('show')}
-function approveQ(i){const p=parseInt(document.getElementById(`apfP${i}`)?.value);if(!p||p<1000){toast('Ingresa un precio válido','⚠️','warn');return}QUOTES[i].status='approved';QUOTES[i].price=p;QUOTES[i].deposit=Math.round(p*((SETTINGS.deposit||20)/100)/1000)*1000;localStorage.setItem('aleink_quotes',JSON.stringify(QUOTES));toast(`${QUOTES[i].id} aprobada · Abono: $${fmt(QUOTES[i].deposit)}`,'✅','success');renderAdmin()}
-function rejectQ(i){if(!confirm(`¿Rechazar cotización de ${QUOTES[i].name}?`))return;QUOTES.splice(i,1);localStorage.setItem('aleink_quotes',JSON.stringify(QUOTES));toast('Cotización eliminada','✕');renderAdmin()}
-function openWA(phone,name,style){const msg=encodeURIComponent(`Hola ${name}! Te escribo desde ALE.INK respecto a tu cotización de ${style}.`);window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${msg}`,'_blank')}
-function openDep(id){const q=QUOTES.find(x=>x.id===id);if(!q||q.status!=='approved')return;renderDep(q)}
-
-function renderDep(q){
-  const sn=STYLES_DATA.find(s=>s.id===q.style)?.label||q.style;
-  document.getElementById('depCard').innerHTML=`
-    <div class="dep-header"><div class="dep-logo"><em>ALE</em>.INK</div><button class="dep-close" onclick="closeDep()">CERRAR ✕</button></div>
-    <div class="dep-tag">Confirmación de reserva</div>
-    <div class="dep-id">${q.id} · ${sn} · ${q.zone}</div>
-    <div class="dep-albl">Abono requerido (20%)</div>
-    <div class="dep-amount">$${fmt(q.deposit)}</div>
-    <div class="dep-divider"></div>
-    <div class="dep-tlbl">Datos de transferencia</div>
-    <div class="dep-row"><span class="dep-rk">Banco</span><span class="dep-rv">— Agrega tu banco —</span></div>
-    <div class="dep-row"><span class="dep-rk">Tipo de cuenta</span><span class="dep-rv">— Tipo de cuenta —</span></div>
-    <div class="dep-row"><span class="dep-rk">RUT</span><span class="dep-rv">— Tu RUT —</span></div>
-    <div class="dep-row"><span class="dep-rk">Titular</span><span class="dep-rv">Alejandro Briceño</span></div>
-    <div class="dep-row"><span class="dep-rk">Email</span><span class="dep-rv">— Tu email —</span></div>
-    <div class="dep-divider"></div>
-    <div class="dep-tlbl">Sube tu comprobante</div>
-    <div class="dep-upload" onclick="toast('Comprobante recibido · En revisión...','📎','success')">
-      <div style="font-size:2rem;margin-bottom:8px">↑</div>
-      <div style="font-family:var(--m);font-size:.56rem;letter-spacing:.2em;text-transform:uppercase;color:var(--w50)">Subir captura del pago</div>
-    </div>
-    <button class="dep-confirm" onclick="confirmDep()"><span>Confirmar reserva</span><span style="font-size:1.2rem">→</span></button>`;
-  document.getElementById('depositScreen').classList.add('open');
-}
-function closeDep(){document.getElementById('depositScreen').classList.remove('open')}
-function confirmDep(){toast('¡Reserva confirmada! Tu lugar está asegurado 🎉','✅','success');setTimeout(closeDep,1600)}
-
-// ═══════════════════ ADMIN: Calendar / Stats / Settings ═══════════════════
-function renderAdmCalendar(){
-  const el=document.getElementById('admCal');if(!el)return;
-  const approved=QUOTES.filter(q=>q.status==='approved');
-  if(!approved.length){
-    el.innerHTML=`<div style="padding:60px 20px;text-align:center;font-family:var(--m);font-size:.68rem;letter-spacing:.3em;text-transform:uppercase;color:var(--w25)">Sin citas aprobadas aún.<br><span style="color:var(--red);margin-top:8px;display:block">Las cotizaciones aprobadas aparecerán aquí.</span></div>`;
-    return;
-  }
-  el.innerHTML='<div style="display:flex;flex-direction:column;gap:10px">'+approved.map(q=>{
-    const sn=STYLES_DATA.find(s=>s.id===q.style)?.label||q.style;
-    return `<div class="qcard approved" style="display:block">
-      <div class="qc-id">${q.id} · ${q.date}</div>
-      <div class="qc-name">${q.name}</div>
-      <div class="qc-contacts"><span>📱 ${q.wa}</span><span>IG ${q.ig}</span></div>
-      <div class="qc-tags"><span class="qtag hi">${sn}</span><span class="qtag">${q.zone||'—'}</span><span class="qtag">${q.w}×${q.h}cm</span></div>
-      <div class="qc-concept">"${q.concept}"</div>
-      ${q.price?`<div class="qc-price-info">Precio: $${fmt(q.price)} · Abono: $${fmt(q.deposit)}</div>`:''}
-    </div>`;
-  }).join('')+'</div>';
-}
-
-function renderAdmStats(){
-  const el=document.getElementById('admStats');if(!el)return;
-  const total=QUOTES.length;
-  const approved=QUOTES.filter(q=>q.status==='approved').length;
-  const pending=QUOTES.filter(q=>q.status==='pending').length;
-  const dep=QUOTES.filter(q=>q.deposit).reduce((s,q)=>s+q.deposit,0);
-  const conv=total?Math.round(approved/total*100):0;
-  // distribución por estilo
-  const styleCounts={};
-  QUOTES.forEach(q=>{styleCounts[q.style]=(styleCounts[q.style]||0)+1});
-  const colors_map={BLACKWORK:'#ff003c',REALISMO:'#ff4d6a',FINE_LINE:'#ff8099',GEOMETRICO:'#ffb3bf',TRADITIONAL:'#c0392b',WATERCOLOR:'#e74c3c'};
-  const styleRows=Object.entries(styleCounts).map(([k,v])=>({name:STYLES_DATA.find(s=>s.id===k)?.label||k,pct:total?Math.round(v/total*100):0,color:colors_map[k]||'#888'})).sort((a,b)=>b.pct-a.pct);
-  if(!total){
-    el.innerHTML=`<div style="padding:60px 20px;text-align:center;font-family:var(--m);font-size:.68rem;letter-spacing:.3em;text-transform:uppercase;color:var(--w25)">Sin datos aún.<br><span style="color:var(--red);margin-top:8px;display:block">Las estadísticas se generarán cuando haya cotizaciones reales.</span></div>`;return;
-  }
-  el.innerHTML=`
-    <div class="stat-grid">
-      <div class="stat-card"><div class="sc-lbl">Total cotizaciones</div><div class="sc-val" style="color:var(--red)">${total}</div><div class="sc-change">Desde el inicio</div></div>
-      <div class="stat-card green"><div class="sc-lbl">Tasa de conversión</div><div class="sc-val">${conv}%</div><div class="sc-change">${approved} aprobadas de ${total}</div></div>
-      <div class="stat-card amber"><div class="sc-lbl">Abonos recibidos</div><div class="sc-val" style="color:var(--amber)">$${fmt(dep)}</div><div class="sc-change">${pending} pendientes</div></div>
-    </div>
-    <div class="chart-wrap">
-      <div class="chart-title">Distribución por estilo</div>
-      <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
-        ${styleRows.map(r=>`<div style="display:flex;align-items:center;gap:12px">
-          <span style="font-family:var(--m);font-size:.62rem;color:var(--w50);width:90px;flex-shrink:0">${r.name}</span>
-          <div style="flex:1;height:6px;background:var(--bg4);position:relative">
-            <div style="position:absolute;left:0;top:0;height:100%;width:${r.pct}%;background:${r.color};transition:width .8s var(--ease)"></div>
-          </div>
-          <span style="font-family:var(--d);font-size:1.1rem;color:var(--w);width:40px;text-align:right">${r.pct}%</span>
-        </div>`).join('')}
-      </div>
-    </div>`;
-}
-
-const SETTINGS={wa:'+56 9 0000 0000',deposit:20,reminder72:true,reminder24:true,aftercare:true,autoWhatsApp:true,studioName:'ALE.INK',email:'ale@aleink.cl'};
-function renderAdmSettings(){
-  const el=document.getElementById('admSettings');if(!el)return;
-  el.innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
-      <div>
-        <p style="font-family:var(--m);font-size:.52rem;letter-spacing:.3em;text-transform:uppercase;color:var(--red);margin-bottom:16px">Datos del estudio</p>
-        <div style="margin-bottom:12px"><label class="flbl" style="margin-bottom:6px;display:block">Nombre del estudio</label><input class="input-setting" value="${SETTINGS.studioName}" onchange="SETTINGS.studioName=this.value"/></div>
-        <div style="margin-bottom:12px"><label class="flbl" style="margin-bottom:6px;display:block">WhatsApp de contacto</label><input class="input-setting" value="${SETTINGS.wa}" onchange="SETTINGS.wa=this.value"/></div>
-        <div style="margin-bottom:12px"><label class="flbl" style="margin-bottom:6px;display:block">Email del estudio</label><input class="input-setting" value="${SETTINGS.email}" onchange="SETTINGS.email=this.value"/></div>
-        <div style="margin-bottom:12px"><label class="flbl" style="margin-bottom:6px;display:block">% de abono requerido</label><input class="input-setting" type="number" value="${SETTINGS.deposit}" onchange="SETTINGS.deposit=+this.value" style="width:100px"/></div>
-      </div>
-      <div>
-        <p style="font-family:var(--m);font-size:.52rem;letter-spacing:.3em;text-transform:uppercase;color:var(--red);margin-bottom:16px">Automatizaciones</p>
-        ${[{key:'autoWhatsApp',label:'WhatsApp automático al recibir cotización',sub:'Notifica al artista inmediatamente'},{key:'reminder72',label:'Recordatorio 72h antes de sesión',sub:'Enviado por WhatsApp al cliente'},{key:'reminder24',label:'Instrucciones de preparación 24h antes',sub:'Email + WhatsApp con cuidados previos'},{key:'aftercare',label:'Aftercare automático post-sesión',sub:'Enviado 1 hora después de la sesión'}].map(s=>`<div class="setting-row"><div class="sr-left"><div class="sr-title">${s.label}</div><div class="sr-sub">${s.sub}</div></div><div class="toggle-switch ${SETTINGS[s.key]?'on':'off'}" id="tog-${s.key}" onclick="toggleSetting('${s.key}')"></div></div>`).join('')}
-      </div>
-    </div>
-    <button class="save-settings-btn" onclick="admToast('Configuración guardada ✓')">Guardar configuración</button>`;
-}
-function toggleSetting(key){SETTINGS[key]=!SETTINGS[key];const el=document.getElementById('tog-'+key);if(el){el.classList.toggle('on',SETTINGS[key]);el.classList.toggle('off',!SETTINGS[key])}admToast(SETTINGS[key]?`${key} activado`:`${key} desactivado`,'✓')}
-function admToast(msg,icon='✓'){toast(msg,icon,'success')}
-
-function exportCSV(){
-  const headers=['ID','Nombre','Instagram','WhatsApp','Estilo','Zona','Ancho','Alto','Concepto','Estado','Precio','Abono','Fecha'];
-  const rows=QUOTES.map(q=>[q.id,q.name,q.ig,q.wa,q.style,q.zone||'',q.w,q.h,`"${q.concept}"`,q.status,q.price||'',q.deposit||'',q.date]);
-  const csv=[headers.join(','),...rows.map(r=>r.join(','))].join('\n');
-  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='aleink-cotizaciones-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
-  admToast('CSV exportado','📊');
 }
 
 // ═══════════════════ TOAST ═══════════════════
