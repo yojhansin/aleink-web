@@ -668,7 +668,7 @@ body{background:var(--bg);color:var(--w);font-family:var(--s);font-weight:400;fo
     <button class="pin-key" onclick="pinPress('0')">0</button>
     <button class="pin-key del" onclick="pinDel()" aria-label="Borrar último dígito">⌫</button>
   </div>
-  <div class="pin-notice" id="pinHint">PIN por defecto: 1234 · Cámbialo en Ajustes</div>
+  <div class="pin-notice" id="pinHint">Ingresa tu PIN de 4 dígitos</div>
 </div>
 
 <!-- NOTIFICATION OVERLAY -->
@@ -900,20 +900,12 @@ const STYLE_COLORS = {
 
 
 
-const DEFAULT_QUOTES = [
-  {id:'Q-001',name:'Camila F.',ig:'@camila.fb',wa:'+56 9 1234 5678',date:'2025-06-12',style:'REALISMO',zone:'Brazo completo',w:25,h:35,flash:'',concept:'Retrato felino realista, estilo blanco y negro con sombreado suave.',status:'pending',price:null,deposit:null},
-  {id:'Q-002',name:'Valentina M.',ig:'@vale.morales',wa:'+56 9 8765 4321',date:'2025-06-14',style:'BLACKWORK',zone:'Antebrazo',w:12,h:18,flash:'',concept:'Lobo geométrico minimalista, líneas finas y patrones triangulares.',status:'approved',price:90000,deposit:18000},
-  {id:'Q-003',name:'Diego F.',ig:'@diego.f',wa:'+56 9 5555 1212',date:'2025-06-09',style:'BLACKWORK',zone:'Pecho',w:20,h:20,flash:'',concept:'Cover-up de tatuaje antiguo, diseño blackwork denso.',status:'done',price:160000,deposit:32000},
-];
+const DEFAULT_QUOTES = [];
 
-const DEFAULT_SESSIONS = [
-  {id:'S-001',name:'Camila F.',date:'2025-06-17',time:'10:00',style:'REALISMO',zone:'Brazo completo',dur:4,price:185000,notes:'Retrato felino. Primera sesión de sleeve.',status:'upcoming'},
-  {id:'S-002',name:'Valentina M.',date:'2025-06-19',time:'14:00',style:'BLACKWORK',zone:'Antebrazo',dur:3,price:90000,notes:'Lobo geométrico. Abono recibido.',status:'upcoming'},
-  {id:'S-003',name:'Diego F.',date:'2025-06-10',time:'11:00',style:'BLACKWORK',zone:'Pecho',dur:5,price:160000,notes:'Cover-up blackwork.',status:'done'},
-];
+const DEFAULT_SESSIONS = [];
 
 const DEFAULT_SETTINGS = {
-  wa:'+56 9 74369717',deposit:20,studioName:'ALE.INK',email:'ale@aleink.cl',
+  wa:'+56 9 3637 1706',deposit:20,studioName:'ALE.INK',email:'ale@aleink.cl',
   reminder72:true,reminder24:true,aftercare:true,autoWA:true
 };
 
@@ -947,6 +939,7 @@ function pinPress(d) {
         sessionStorage.setItem('aleink_unlocked', '1');
         setTimeout(() => { ls.style.display = 'none'; }, 420);
         initApp();
+        warnDefaultPin();
       } else {
         document.querySelectorAll('.pin-dot').forEach(el => el.classList.add('err'));
         setTimeout(() => {
@@ -982,6 +975,42 @@ function initApp() {
   setupAutoRefresh();
   renderNotifList();
 }
+
+// ── Limpieza de datos ficticios del localStorage ──
+// Los datos de ejemplo (Q-001..Q-003 / S-001..S-003) ya no se cargan nunca,
+// pero pueden haber quedado guardados en el navegador del artista desde
+// versiones anteriores. Esta rutina los borra SIEMPRE, haya o no datos
+// reales junto a ellos.
+(function purgeDemo() {
+  try {
+    const FAKE_IDS = ['Q-001','Q-002','Q-003'];
+    const FAKE_SESSION_IDS = ['S-001','S-002','S-003'];
+    const FAKE_NAMES = ['Camila F.','Valentina M.','Diego F.'];
+
+    const isFakeQuote = q => FAKE_IDS.includes(q.id) ||
+      (FAKE_NAMES.includes(q.name) && ['@camila.fb','@vale.morales','@diego.f'].includes(q.ig));
+    const isFakeSession = s => FAKE_SESSION_IDS.includes(s.id) ||
+      (FAKE_NAMES.includes(s.name) && ['2025-06-17','2025-06-19','2025-06-10'].includes(s.date));
+
+    const qraw = localStorage.getItem('aleink_quotes');
+    if (qraw) {
+      const qs = JSON.parse(qraw);
+      const cleaned = qs.filter(q => !isFakeQuote(q));
+      if (cleaned.length !== qs.length) {
+        localStorage.setItem('aleink_quotes', JSON.stringify(cleaned));
+      }
+    }
+
+    const sraw = localStorage.getItem('aleink_sessions');
+    if (sraw) {
+      const ss = JSON.parse(sraw);
+      const cleaned = ss.filter(s => !isFakeSession(s));
+      if (cleaned.length !== ss.length) {
+        localStorage.setItem('aleink_sessions', JSON.stringify(cleaned));
+      }
+    }
+  } catch(e) {}
+})();
 
 function loadAll() {
   // Load quotes — merge with localStorage (shared with main page)
@@ -1095,7 +1124,7 @@ async function syncFromServer(){
     let serverQ = await res.json();
     if(!Array.isArray(serverQ)) return;
     // El backend (Google Sheets) puede devolver números o fechas donde
-    // esperamos texto (ej. un WhatsApp "56974369717" llega como número).
+    // esperamos texto (ej. un WhatsApp "56912345678" llega como número).
     // Normalizamos los campos de texto a String para que el panel nunca
     // truene al hacer .replace() u otras operaciones de texto.
     serverQ = serverQ.map(q => {
@@ -1127,6 +1156,10 @@ async function syncFromServer(){
         status: q.status != null ? String(q.status) : 'pending'
       };
     });
+    // Si alguna cotización de ejemplo llegó a guardarse en el Sheet en su
+    // momento, no debe volver a aparecer en el panel del artista.
+    const DEMO_IDS = ['Q-001','Q-002','Q-003'];
+    serverQ = serverQ.filter(q => !DEMO_IDS.includes(q.id));
     const oldIds = new Set(QUOTES.map(q=>q.id));
     const fresh = serverQ.filter(q=>q.id && !oldIds.has(q.id));
     const serverIds = new Set(serverQ.map(q=>q.id));
@@ -1154,6 +1187,10 @@ async function syncStateFromServer(){
     const st = await res.json();
     if(!st || typeof st !== 'object') return;
     let changed = false;
+    const DEMO_SESSION_IDS = ['S-001','S-002','S-003'];
+    if(Array.isArray(st.sessions)){
+      st.sessions = st.sessions.filter(x => !DEMO_SESSION_IDS.includes(x.id));
+    }
     if(Array.isArray(st.sessions) && JSON.stringify(st.sessions) !== JSON.stringify(SESSIONS)){
       SESSIONS = st.sessions;
       localStorage.setItem(SESSIONS_KEY, JSON.stringify(SESSIONS)); // sin re-empujar
@@ -2372,8 +2409,16 @@ function buildSettingsTab() {
     <div class="settings-section">
       <div class="settings-sec-title">PIN de acceso</div>
       <div class="field-group">
+        <label class="field-label" for="sPinOld">PIN actual</label>
+        <input class="finp" id="sPinOld" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off" style="max-width:120px"/>
+      </div>
+      <div class="field-group">
         <label class="field-label" for="sPin">Nuevo PIN (4 dígitos)</label>
-        <input class="finp" id="sPin" type="password" maxlength="4" placeholder="Nuevo PIN" style="max-width:120px"/>
+        <input class="finp" id="sPin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off" style="max-width:120px"/>
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="sPin2">Repetir nuevo PIN</label>
+        <input class="finp" id="sPin2" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off" style="max-width:120px"/>
       </div>
       <button class="export-btn" style="max-width:200px" onclick="changePin()"><svg class="icon"><use href="#i-lock"></use></svg> Cambiar PIN</button>
     </div>
@@ -2396,7 +2441,7 @@ function buildSettingsTab() {
       <div class="settings-sec-title">Exportar datos</div>
       <button class="export-btn" onclick="exportCSV()"><svg class="icon"><use href="#i-bar-chart"></use></svg> Exportar cotizaciones CSV</button>
       <button class="export-btn" onclick="exportSessionsCSV()"><svg class="icon"><use href="#i-calendar"></use></svg> Exportar sesiones CSV</button>
-      <button class="export-btn" style="color:var(--red);background:var(--red3)" onclick="resetData()"><svg class="icon"><use href="#i-trash"></use></svg> Restablecer datos (demo)</button>
+      <button class="export-btn" style="color:var(--red);background:var(--red3)" onclick="resetData()"><svg class="icon"><use href="#i-trash"></use></svg> Borrar todos los datos</button>
     </div>
 
     <button class="save-btn" onclick="saveSettingsUI()">Guardar configuración →</button>
@@ -2420,11 +2465,28 @@ function saveSettingsUI() {
 }
 
 function changePin() {
-  const np = document.getElementById('sPin')?.value.trim();
-  if (!np || np.length !== 4 || !/^\d+$/.test(np)) { toast('PIN debe ser 4 dígitos', '<svg class="icon"><use href="#i-alert-triangle"></use></svg>', 'warn'); return; }
+  const warn = m => toast(m, '<svg class="icon"><use href="#i-alert-triangle"></use></svg>', 'warn');
+
+  const oldPin = document.getElementById('sPinOld')?.value.trim();
+  const np     = document.getElementById('sPin')?.value.trim();
+  const np2    = document.getElementById('sPin2')?.value.trim();
+
+  // Verificar el PIN actual: si alguien deja el panel abierto, no debería
+  // poder cambiar el código sin conocer el que ya está puesto.
+  if (oldPin !== getPin()) { warn('El PIN actual no es correcto'); return; }
+
+  if (!np || np.length !== 4 || !/^\d{4}$/.test(np)) { warn('El PIN debe ser de 4 dígitos'); return; }
+  if (np !== np2) { warn('Los PIN nuevos no coinciden'); return; }
+  if (np === getPin()) { warn('El PIN nuevo es igual al actual'); return; }
+
+  // Rechazar los PIN más fáciles de adivinar
+  const debiles = ['1234','0000','1111','2222','3333','4444','5555',
+                   '6666','7777','8888','9999','4321','1212'];
+  if (debiles.includes(np)) { warn('Ese PIN es muy fácil de adivinar. Elige otro.'); return; }
+
   localStorage.setItem(PIN_KEY, np);
-  document.getElementById('sPin').value = '';
-  toast('PIN actualizado', '<svg class="icon"><use href="#i-lock"></use></svg>', 'success');
+  ['sPinOld','sPin','sPin2'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  toast('PIN actualizado correctamente', '<svg class="icon"><use href="#i-lock"></use></svg>', 'success');
 }
 
 function exportCSV() {
@@ -2452,15 +2514,15 @@ function dlCSV(csv, name) {
 function resetData() {
   showConfirm({
     icon: '<svg class="icon"><use href="#i-alert-triangle"></use></svg>',
-    title: 'Restablecer datos',
-    body: 'Se borrarán todas las cotizaciones y sesiones actuales y se cargarán los datos de ejemplo. Esto no se puede deshacer.',
-    okLabel: 'Sí, restablecer',
+    title: 'Borrar todos los datos',
+    body: 'Se eliminarán TODAS las cotizaciones y sesiones guardadas. Esta accion no se puede deshacer. Exporta un CSV antes si quieres conservar el historial.',
+    okLabel: 'Si, borrar todo',
     onOk: () => {
-      QUOTES = [...DEFAULT_QUOTES];
-      SESSIONS = [...DEFAULT_SESSIONS];
+      QUOTES = [];
+      SESSIONS = [];
       saveQuotes();
       saveSessions();
-      toast('Datos restablecidos', '<svg class="icon"><use href="#i-check"></use></svg>');
+      toast('Datos borrados', '<svg class="icon"><use href="#i-check"></use></svg>');
       renderTab();
     }
   });
@@ -2516,16 +2578,6 @@ function toast(msg, icon='<svg class="icon"><use href="#i-check"></use></svg>', 
 //  The patch instructions are shown via the info toast below.
 // ═══════════════════════════════════════════════════════
 
-// ── Limpieza de datos ficticios del localStorage ──
-// Si existen datos con IDs de ejemplo (S-001, Q-001, etc.) MEZCLADOS
-// con datos reales, se eliminan solo los de ejemplo.
-// FIX: antes esto corría siempre, apenas encontraba los IDs de ejemplo
-// los borraba — incluso si esos 3 registros eran TODO lo que había.
-// Resultado: quien abría el panel por primera vez veía 3 cotizaciones
-// y 3 sesiones de ejemplo, y con solo recargar la página una vez ya
-// estaban en cero, como si hubiera perdido datos reales. Ahora la
-// limpieza solo actúa cuando además de los IDs de ejemplo hay algún
-// registro real (de ale.html) — recién ahí tiene sentido "limpiar".
 // ── Accesibilidad: cerrar cualquier modal/drawer abierto con Escape ──
 // Comportamiento estándar esperado en cualquier diálogo — no existía.
 document.addEventListener('keydown', function(e) {
@@ -2538,39 +2590,12 @@ document.addEventListener('keydown', function(e) {
   if (document.getElementById('notifOverlay')?.classList.contains('show')) { closeNotifDrawer(); return; }
 });
 
-(function purgeDemo() {
-  try {
-    const FAKE_IDS = ['Q-001','Q-002','Q-003'];
-    const FAKE_SESSION_IDS = ['S-001','S-002','S-003'];
-    const qraw = localStorage.getItem('aleink_quotes');
-    if (qraw) {
-      const qs = JSON.parse(qraw);
-      const hasRealData = qs.some(q => !FAKE_IDS.includes(q.id));
-      if (hasRealData) {
-        const cleaned = qs.filter(q => !FAKE_IDS.includes(q.id));
-        if (cleaned.length !== qs.length) {
-          localStorage.setItem('aleink_quotes', JSON.stringify(cleaned));
-        }
-      }
-    }
-    const sraw = localStorage.getItem('aleink_sessions');
-    if (sraw) {
-      const ss = JSON.parse(sraw);
-      const hasRealSessions = ss.some(s => !FAKE_SESSION_IDS.includes(s.id));
-      if (hasRealSessions) {
-        const cleaned = ss.filter(s => !FAKE_SESSION_IDS.includes(s.id));
-        if (cleaned.length !== ss.length) {
-          localStorage.setItem('aleink_sessions', JSON.stringify(cleaned));
-        }
-      }
-    }
-  } catch(e) {}
-})();
-
-// Ocultar la pista del PIN de fábrica si el tatuador ya lo cambió
-if (getPin() !== '1234') {
-  const ph = document.getElementById('pinHint');
-  if (ph) ph.style.display = 'none';
+// Aviso al artista si todavía usa el PIN de fábrica (solo tras desbloquear)
+function warnDefaultPin() {
+  if (getPin() === '1234') {
+    setTimeout(() => toast('Estás usando el PIN de fábrica. Cámbialo en Ajustes.',
+      '<svg class="icon"><use href="#i-alert-triangle"></use></svg>', 'warn'), 1200);
+  }
 }
 
 // Already unlocked in same session?
